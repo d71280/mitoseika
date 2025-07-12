@@ -14,12 +14,14 @@ import ClientEditPage from './components/ClientEditPage';
 import InventoryTakingPage from './components/inventory/InventoryTakingPage'; // New
 import InventoryAdjustPage from './components/inventory/InventoryAdjustPage'; // New
 import OrderAnalysisPage from './components/OrderAnalysisPage';
+import PurchasePriceInfoPage from './components/PurchasePriceInfoPage';
 import { mockOrders, mitoSeikaCompanyInfo, Client, mockClients, Product, mockProductsInventory } from './types';
 
 export enum PageView {
   DASHBOARD = 'dashboard',
   DETAILED_ANALYSIS = 'detailed_analysis',
   ORDER_ANALYSIS = 'order_analysis',
+  PURCHASE_PRICE_INFO = 'purchase_price_info',
   SUPPLIER_LIST = 'supplier_list',
   SETTINGS = 'settings',
   PRODUCT_ANALYSIS_DETAIL = 'product_analysis_detail',
@@ -98,6 +100,9 @@ const App: React.FC = () => {
       break;
     case PageView.ORDER_ANALYSIS:
       pageContent = <OrderAnalysisPage orders={mockOrders} />;
+      break;
+    case PageView.PURCHASE_PRICE_INFO:
+      pageContent = <PurchasePriceInfoPage />;
       break;
     case PageView.SUPPLIER_LIST:
       pageContent = <SupplierListPage />;
