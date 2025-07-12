@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { Order } from '../types';
 import Card from './ui/Card';
 import Button from './ui/Button';
-import PageHeader from './ui/PageHeader';
 import { ChartBarIcon } from './icons/ChartBarIcon';
 import { TableCellsIcon } from './icons/TableCellsIcon';
 
@@ -116,11 +115,13 @@ const OrderAnalysisPage: React.FC<OrderAnalysisPageProps> = ({ orders }) => {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="注文分析"
-        subtitle="商品別・顧客別の注文データを分析します"
-        icon={<ChartBarIcon className="w-8 h-8" />}
-      />
+      <div className="mb-6">
+        <div className="flex items-center mb-2">
+          <ChartBarIcon className="w-8 h-8 mr-3 text-green-700" />
+          <h1 className="text-3xl font-bold text-green-800">注文分析</h1>
+        </div>
+        <p className="text-gray-600">商品別・顧客別の注文データを分析します</p>
+      </div>
 
       <Card className="p-6">
         <div className="space-y-4">
