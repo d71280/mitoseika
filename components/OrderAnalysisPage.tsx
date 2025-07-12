@@ -26,6 +26,17 @@ interface ClientAnalysis {
   lastOrderDate: string;
 }
 
+const getTodayDate = () => {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+};
+
+const getOneMonthAgoDate = () => {
+  const oneMonthAgo = new Date();
+  oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+  return oneMonthAgo.toISOString().split('T')[0];
+};
+
 const OrderAnalysisPage: React.FC<OrderAnalysisPageProps> = ({ orders }) => {
   const [analysisType, setAnalysisType] = useState<AnalysisType>('product');
   const [startDate, setStartDate] = useState<string>('');
@@ -49,23 +60,21 @@ const OrderAnalysisPage: React.FC<OrderAnalysisPageProps> = ({ orders }) => {
     const productMap = new Map<string, ProductAnalysis>();
     
     filteredOrders.forEach(order => {
-      if (order.items) {
-        order.items.forEach(item => {
-          const existing = productMap.get(item.productName);
-          if (existing) {
-            existing.orderCount += 1;
-            existing.totalQuantity += item.quantity;
-            existing.totalAmount += item.totalPrice;
-          } else {
-            productMap.set(item.productName, {
-              productName: item.productName,
-              orderCount: 1,
-              totalQuantity: item.quantity,
-              totalAmount: item.totalPrice
-            });
-          }
-        });
-      }
+      order.items.forEach(item => {
+        const existing = productMap.get(item.productName);
+        if (existing) {
+          existing.orderCount += 1;
+          existing.totalQuantity += item.quantity;
+          existing.totalAmount += item.totalPrice;
+        } else {
+          productMap.set(item.productName, {
+            productName: item.productName,
+            orderCount: 1,
+            totalQuantity: item.quantity,
+            totalAmount: item.totalPrice
+          });
+        }
+      });
     });
     
     return Array.from(productMap.values()).sort((a, b) => b.orderCount - a.orderCount);
@@ -98,17 +107,6 @@ const OrderAnalysisPage: React.FC<OrderAnalysisPageProps> = ({ orders }) => {
   const resetFilters = () => {
     setStartDate('');
     setEndDate('');
-  };
-
-  const getTodayDate = () => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  };
-
-  const getOneMonthAgoDate = () => {
-    const oneMonthAgo = new Date();
-    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-    return oneMonthAgo.toISOString().split('T')[0];
   };
 
   const setLastMonth = () => {
