@@ -113,6 +113,12 @@ const OrderAnalysisPage: React.FC<OrderAnalysisPageProps> = ({ orders }) => {
     setEndDate(getTodayDate());
   };
 
+  const setToday = () => {
+    const today = getTodayDate();
+    setStartDate(today);
+    setEndDate(today);
+  };
+
   return (
     <div className="space-y-6">
       <div className="mb-6">
@@ -166,6 +172,9 @@ const OrderAnalysisPage: React.FC<OrderAnalysisPageProps> = ({ orders }) => {
           </div>
 
           <div className="flex gap-2">
+            <Button onClick={setToday} variant="primary" size="sm">
+              本日
+            </Button>
             <Button onClick={setLastMonth} variant="secondary" size="sm">
               過去1ヶ月
             </Button>
