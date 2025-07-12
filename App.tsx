@@ -15,12 +15,12 @@ import InventoryTakingPage from './components/inventory/InventoryTakingPage'; //
 import InventoryAdjustPage from './components/inventory/InventoryAdjustPage'; // New
 import OrderAnalysisPage from './components/OrderAnalysisPage';
 import PurchasePriceInfoPage from './components/PurchasePriceInfoPage';
+import IntegratedAnalysisPage from './components/IntegratedAnalysisPage';
 import { mockOrders, mitoSeikaCompanyInfo, Client, mockClients, Product, mockProductsInventory } from './types';
 
 export enum PageView {
   DASHBOARD = 'dashboard',
-  DETAILED_ANALYSIS = 'detailed_analysis',
-  ORDER_ANALYSIS = 'order_analysis',
+  INTEGRATED_ANALYSIS = 'integrated_analysis',
   PURCHASE_PRICE_INFO = 'purchase_price_info',
   SUPPLIER_LIST = 'supplier_list',
   SETTINGS = 'settings',
@@ -95,11 +95,8 @@ const App: React.FC = () => {
 
   let pageContent;
   switch (currentPage) {
-    case PageView.DETAILED_ANALYSIS:
-      pageContent = <DetailedAnalysisPage navigateTo={navigateTo} />;
-      break;
-    case PageView.ORDER_ANALYSIS:
-      pageContent = <OrderAnalysisPage orders={mockOrders} />;
+    case PageView.INTEGRATED_ANALYSIS:
+      pageContent = <IntegratedAnalysisPage orders={mockOrders} />;
       break;
     case PageView.PURCHASE_PRICE_INFO:
       pageContent = <PurchasePriceInfoPage />;
@@ -115,11 +112,11 @@ const App: React.FC = () => {
         pageContent = (
           <ProductAnalysisDetailPage
             productId={selectedAnalysisItemId}
-            onNavigateBack={() => navigateTo(PageView.DETAILED_ANALYSIS)}
+            onNavigateBack={() => navigateTo(PageView.INTEGRATED_ANALYSIS)}
           />
         );
       } else {
-        pageContent = <DetailedAnalysisPage navigateTo={navigateTo} />; 
+        pageContent = <IntegratedAnalysisPage orders={mockOrders} />; 
       }
       break;
     case PageView.CLIENT_ANALYSIS_DETAIL:
@@ -127,11 +124,11 @@ const App: React.FC = () => {
         pageContent = (
           <ClientAnalysisDetailPage
             clientId={selectedAnalysisItemId}
-            onNavigateBack={() => navigateTo(PageView.DETAILED_ANALYSIS)}
+            onNavigateBack={() => navigateTo(PageView.INTEGRATED_ANALYSIS)}
           />
         );
       } else {
-        pageContent = <DetailedAnalysisPage navigateTo={navigateTo} />; 
+        pageContent = <IntegratedAnalysisPage orders={mockOrders} />; 
       }
       break;
     case PageView.DELIVERY_SLIP:
