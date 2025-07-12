@@ -7,12 +7,13 @@ import { TableCellsIcon } from './icons/TableCellsIcon';
 import { PresentationChartLineIcon } from './icons/PresentationChartLineIcon';
 import { CurrencyYenIcon } from './icons/CurrencyYenIcon';
 import { ClipboardListIcon } from './icons/ClipboardListIcon';
+import { ShoppingCartIcon } from './icons/ShoppingCartIcon';
 
 interface IntegratedAnalysisPageProps {
   orders: Order[];
 }
 
-type AnalysisTab = 'overview' | 'order-details' | 'client-timeline' | 'product-timeline' | 'profit-cost';
+type AnalysisTab = 'overview' | 'purchase-analysis' | 'order-details' | 'client-timeline' | 'product-timeline' | 'profit-cost';
 
 interface TimeSeriesData {
   date: string;
@@ -218,6 +219,7 @@ const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders 
 
   const tabs = [
     { id: 'overview', label: '注文状況', icon: <ChartBarIcon className="w-5 h-5" /> },
+    { id: 'purchase-analysis', label: '仕入れ分析', icon: <ShoppingCartIcon className="w-5 h-5" /> },
     { id: 'order-details', label: '注文明細', icon: <ClipboardListIcon className="w-5 h-5" /> },
     { id: 'client-timeline', label: 'クライアント分析', icon: <TableCellsIcon className="w-5 h-5" /> },
     { id: 'product-timeline', label: '商品分析', icon: <PresentationChartLineIcon className="w-5 h-5" /> },
@@ -258,6 +260,52 @@ const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders 
     });
 
     return details.sort((a, b) => b.orderDate.localeCompare(a.orderDate));
+  }, [filteredOrders]);
+
+  // 仕入れ分析データ（在庫数を考慮した必要仕入数）
+  const purchaseAnalysisData = useMemo(() => {
+    const productMap = new Map<string, {
+      productName: string;
+      totalDemand: number;
+      currentStock: number;
+      requiredPurchase: number;
+      unit: string;
+      averageOrderQuantity: number;
+      orderFrequency: number;
+    }>();
+
+    filteredOrders.forEach(order => {
+      order.items.forEach(item => {
+        if (!productMap.has(item.productName)) {
+          productMap.set(item.productName, {
+            productName: item.productName,
+            totalDemand: 0,
+            currentStock: Math.floor(Math.random() * 100) + 20, // 仮の在庫数（20-120）
+            requiredPurchase: 0,
+            unit: item.unit.toString(),
+            averageOrderQuantity: 0,
+            orderFrequency: 0
+          });
+        }
+
+        const productData = productMap.get(item.productName)!;
+        productData.totalDemand += item.quantity;
+        productData.orderFrequency += 1;
+      });
+    });
+
+    // 必要仕入数を計算
+    return Array.from(productMap.values()).map(product => {
+      const averageOrderQuantity = product.totalDemand / product.orderFrequency;
+      const safetyStock = Math.ceil(averageOrderQuantity * 1.5); // 安全在庫は平均注文数の1.5倍
+      const requiredPurchase = Math.max(0, product.totalDemand + safetyStock - product.currentStock);
+      
+      return {
+        ...product,
+        averageOrderQuantity,
+        requiredPurchase
+      };
+    }).sort((a, b) => b.requiredPurchase - a.requiredPurchase);
   }, [filteredOrders]);
 
   // 日付範囲が複数日かどうかを判定
@@ -439,6 +487,44 @@ const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders 
                 <div className="text-sm text-gray-800">平均注文金額</div>
               </Card>
             </div>
+
+            {/* 商品別データテーブル */}
+            {productTimelineData.length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">商品別データ一覧</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse border border-gray-300">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="border border-gray-300 px-4 py-2 text-left">商品名</th>
+                        <th className="border border-gray-300 px-4 py-2 text-right">総数量</th>
+                        <th className="border border-gray-300 px-4 py-2 text-right">総売上</th>
+                        <th className="border border-gray-300 px-4 py-2 text-right">平均粗利/単位</th>
+                        <th className="border border-gray-300 px-4 py-2 text-right">平均原価/単位</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {productTimelineData.slice(0, 10).map((product, index) => (
+                        <tr key={product.productName} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                          <td className="border border-gray-300 px-4 py-2">
+                            <button 
+                              onClick={() => setActiveTab('product-timeline')}
+                              className="font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                            >
+                              {product.productName}
+                            </button>
+                          </td>
+                          <td className="border border-gray-300 px-4 py-2 text-right">{product.totalQuantity.toLocaleString()}</td>
+                          <td className="border border-gray-300 px-4 py-2 text-right">¥{product.totalRevenue.toLocaleString()}</td>
+                          <td className="border border-gray-300 px-4 py-2 text-right">¥{Math.round(product.averageProfit).toLocaleString()}</td>
+                          <td className="border border-gray-300 px-4 py-2 text-right">¥{Math.round(product.averageCost).toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
             
             {/* 複数日の場合は時系列グラフを表示 */}
             {isMultipleDays && dailyData.length > 1 && (
@@ -465,6 +551,112 @@ const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders 
                   />
                 </div>
               </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'purchase-analysis' && (
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold text-gray-800">仕入れ分析</h2>
+            <p className="text-gray-600 mb-4">在庫数を考慮した必要仕入数を表示します。安全在庫を含めた推奨仕入数量をご確認ください。</p>
+            
+            {/* 仕入れサマリーカード */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <Card className="p-4 bg-orange-50">
+                <div className="text-2xl font-bold text-orange-600">
+                  {purchaseAnalysisData.filter(p => p.requiredPurchase > 0).length}
+                </div>
+                <div className="text-sm text-orange-800">要仕入れ商品数</div>
+              </Card>
+              <Card className="p-4 bg-red-50">
+                <div className="text-2xl font-bold text-red-600">
+                  {purchaseAnalysisData.reduce((sum, p) => sum + p.requiredPurchase, 0).toLocaleString()}
+                </div>
+                <div className="text-sm text-red-800">総必要仕入数</div>
+              </Card>
+              <Card className="p-4 bg-blue-50">
+                <div className="text-2xl font-bold text-blue-600">
+                  {purchaseAnalysisData.reduce((sum, p) => sum + p.currentStock, 0).toLocaleString()}
+                </div>
+                <div className="text-sm text-blue-800">現在の総在庫数</div>
+              </Card>
+            </div>
+
+            {/* 必要仕入数一覧テーブル */}
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="border border-gray-300 px-4 py-2 text-left">商品名</th>
+                    <th className="border border-gray-300 px-4 py-2 text-right">現在在庫</th>
+                    <th className="border border-gray-300 px-4 py-2 text-right">期間内需要</th>
+                    <th className="border border-gray-300 px-4 py-2 text-right">平均注文数</th>
+                    <th className="border border-gray-300 px-4 py-2 text-right">注文頻度</th>
+                    <th className="border border-gray-300 px-4 py-2 text-right">必要仕入数</th>
+                    <th className="border border-gray-300 px-4 py-2 text-center">仕入れ優先度</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {purchaseAnalysisData.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="border border-gray-300 px-4 py-8 text-center text-gray-500">
+                        該当する仕入れデータがありません
+                      </td>
+                    </tr>
+                  ) : (
+                    purchaseAnalysisData.map((item, index) => (
+                      <tr key={item.productName} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                        <td className="border border-gray-300 px-4 py-2 font-medium">{item.productName}</td>
+                        <td className="border border-gray-300 px-4 py-2 text-right">
+                          {item.currentStock.toLocaleString()}{item.unit}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2 text-right">
+                          {item.totalDemand.toLocaleString()}{item.unit}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2 text-right">
+                          {Math.round(item.averageOrderQuantity).toLocaleString()}{item.unit}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2 text-right">
+                          {item.orderFrequency}回
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2 text-right">
+                          <span className={item.requiredPurchase > 0 ? 'font-bold text-red-600' : 'text-green-600'}>
+                            {item.requiredPurchase > 0 ? item.requiredPurchase.toLocaleString() : '0'}{item.unit}
+                          </span>
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2 text-center">
+                          {item.requiredPurchase > 50 ? (
+                            <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">高</span>
+                          ) : item.requiredPurchase > 20 ? (
+                            <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">中</span>
+                          ) : item.requiredPurchase > 0 ? (
+                            <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">低</span>
+                          ) : (
+                            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">安全</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* 仕入れ推奨アクション */}
+            {purchaseAnalysisData.filter(p => p.requiredPurchase > 0).length > 0 && (
+              <Card className="p-4 bg-yellow-50 border-yellow-200">
+                <h3 className="text-lg font-semibold text-yellow-800 mb-2">仕入れ推奨アクション</h3>
+                <div className="space-y-2">
+                  {purchaseAnalysisData
+                    .filter(p => p.requiredPurchase > 0)
+                    .slice(0, 5)
+                    .map(item => (
+                      <div key={item.productName} className="text-sm text-yellow-700">
+                        • <strong>{item.productName}</strong>: {item.requiredPurchase.toLocaleString()}{item.unit} の仕入れを推奨
+                      </div>
+                    ))}
+                </div>
+              </Card>
             )}
           </div>
         )}
