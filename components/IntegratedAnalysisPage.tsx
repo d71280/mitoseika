@@ -6,12 +6,13 @@ import { ChartBarIcon } from './icons/ChartBarIcon';
 import { TableCellsIcon } from './icons/TableCellsIcon';
 import { PresentationChartLineIcon } from './icons/PresentationChartLineIcon';
 import { CurrencyYenIcon } from './icons/CurrencyYenIcon';
+import { ClipboardListIcon } from './icons/ClipboardListIcon';
 
 interface IntegratedAnalysisPageProps {
   orders: Order[];
 }
 
-type AnalysisTab = 'overview' | 'client-timeline' | 'product-timeline' | 'profit-cost';
+type AnalysisTab = 'overview' | 'order-details' | 'client-timeline' | 'product-timeline' | 'profit-cost';
 
 interface TimeSeriesData {
   date: string;
@@ -217,6 +218,7 @@ const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders 
 
   const tabs = [
     { id: 'overview', label: '注文状況', icon: <ChartBarIcon className="w-5 h-5" /> },
+    { id: 'order-details', label: '注文明細', icon: <ClipboardListIcon className="w-5 h-5" /> },
     { id: 'client-timeline', label: 'クライアント分析', icon: <TableCellsIcon className="w-5 h-5" /> },
     { id: 'product-timeline', label: '商品分析', icon: <PresentationChartLineIcon className="w-5 h-5" /> },
     { id: 'profit-cost', label: '粗利・原価分析', icon: <CurrencyYenIcon className="w-5 h-5" /> },
@@ -224,6 +226,39 @@ const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders 
 
   const uniqueClients = Array.from(new Set(filteredOrders.map(order => order.clientName)));
   const uniqueProducts = Array.from(new Set(filteredOrders.flatMap(order => order.items.map(item => item.productName))));
+
+  // 注文明細データ（注文者、品目、個数、売上）
+  const orderDetailsData = useMemo(() => {
+    const details: Array<{
+      orderId: string;
+      orderNumber: string;
+      orderDate: string;
+      clientName: string;
+      productName: string;
+      quantity: number;
+      unit: string;
+      unitPrice: number;
+      totalPrice: number;
+    }> = [];
+
+    filteredOrders.forEach(order => {
+      order.items.forEach(item => {
+        details.push({
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          orderDate: order.issueDate,
+          clientName: order.clientName,
+          productName: item.productName,
+          quantity: item.quantity,
+          unit: item.unit.toString(),
+          unitPrice: item.unitPrice,
+          totalPrice: item.totalPrice
+        });
+      });
+    });
+
+    return details.sort((a, b) => b.orderDate.localeCompare(a.orderDate));
+  }, [filteredOrders]);
 
   // 日付範囲が複数日かどうかを判定
   const isMultipleDays = useMemo(() => {
@@ -429,6 +464,89 @@ const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders 
                     color="#F59E0B" 
                   />
                 </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'order-details' && (
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold text-gray-800">注文明細リスト</h2>
+            <div className="text-sm text-gray-600 mb-4">
+              総明細件数: {orderDetailsData.length}件 | 総売上: ¥{orderDetailsData.reduce((sum, detail) => sum + detail.totalPrice, 0).toLocaleString()}
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="border border-gray-300 px-4 py-2 text-left">注文日</th>
+                    <th className="border border-gray-300 px-4 py-2 text-left">注文番号</th>
+                    <th className="border border-gray-300 px-4 py-2 text-left">注文者</th>
+                    <th className="border border-gray-300 px-4 py-2 text-left">品目</th>
+                    <th className="border border-gray-300 px-4 py-2 text-right">個数</th>
+                    <th className="border border-gray-300 px-4 py-2 text-right">単価</th>
+                    <th className="border border-gray-300 px-4 py-2 text-right">売上</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orderDetailsData.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="border border-gray-300 px-4 py-8 text-center text-gray-500">
+                        該当する注文明細がありません
+                      </td>
+                    </tr>
+                  ) : (
+                    orderDetailsData.map((detail, index) => (
+                      <tr key={`${detail.orderId}-${detail.productName}-${index}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                        <td className="border border-gray-300 px-4 py-2 text-sm">
+                          {new Date(detail.orderDate).toLocaleDateString('ja-JP')}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2 text-sm font-mono">
+                          {detail.orderNumber}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2 font-medium">
+                          {detail.clientName}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2">
+                          {detail.productName}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2 text-right">
+                          {detail.quantity.toLocaleString()}{detail.unit}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2 text-right">
+                          ¥{detail.unitPrice.toLocaleString()}/{detail.unit}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2 text-right font-semibold">
+                          ¥{detail.totalPrice.toLocaleString()}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            
+            {/* 注文明細サマリー */}
+            {orderDetailsData.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                <Card className="p-4 bg-blue-50">
+                  <div className="text-lg font-bold text-blue-600">
+                    {new Set(orderDetailsData.map(d => d.clientName)).size}社
+                  </div>
+                  <div className="text-sm text-blue-800">注文者数</div>
+                </Card>
+                <Card className="p-4 bg-green-50">
+                  <div className="text-lg font-bold text-green-600">
+                    {new Set(orderDetailsData.map(d => d.productName)).size}品目
+                  </div>
+                  <div className="text-sm text-green-800">商品種類数</div>
+                </Card>
+                <Card className="p-4 bg-yellow-50">
+                  <div className="text-lg font-bold text-yellow-600">
+                    {orderDetailsData.reduce((sum, d) => sum + d.quantity, 0).toLocaleString()}
+                  </div>
+                  <div className="text-sm text-yellow-800">総注文数量</div>
+                </Card>
               </div>
             )}
           </div>
