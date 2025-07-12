@@ -225,6 +225,90 @@ const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders 
   const uniqueClients = Array.from(new Set(filteredOrders.map(order => order.clientName)));
   const uniqueProducts = Array.from(new Set(filteredOrders.flatMap(order => order.items.map(item => item.productName))));
 
+  // 日付範囲が複数日かどうかを判定
+  const isMultipleDays = useMemo(() => {
+    return startDate !== endDate;
+  }, [startDate, endDate]);
+
+  // 日次データ集計（グラフ用）
+  const dailyData = useMemo(() => {
+    const dateMap = new Map<string, { date: string; orders: number; revenue: number; profit: number; }>();
+    
+    filteredOrders.forEach(order => {
+      const dateKey = order.issueDate;
+      
+      if (!dateMap.has(dateKey)) {
+        dateMap.set(dateKey, {
+          date: dateKey,
+          orders: 0,
+          revenue: 0,
+          profit: 0
+        });
+      }
+      
+      const dayData = dateMap.get(dateKey)!;
+      const estimatedProfit = order.items.reduce((sum, item) => {
+        const estimatedCost = item.unitPrice * 0.6;
+        return sum + ((item.unitPrice - estimatedCost) * item.quantity);
+      }, 0);
+      
+      dayData.orders += 1;
+      dayData.revenue += order.totalAmount;
+      dayData.profit += estimatedProfit;
+    });
+
+    return Array.from(dateMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+  }, [filteredOrders]);
+
+  // 簡易グラフコンポーネント
+  const SimpleLineChart: React.FC<{ data: any[]; dataKey: string; title: string; color: string; }> = ({ data, dataKey, title, color }) => {
+    const maxValue = Math.max(...data.map(d => d[dataKey]));
+    const minValue = Math.min(...data.map(d => d[dataKey]));
+    const range = maxValue - minValue || 1;
+    
+    return (
+      <div className="bg-white p-4 rounded-lg border">
+        <h4 className="text-sm font-semibold mb-3 text-gray-700">{title}</h4>
+        <div className="relative h-32 mb-2">
+          <svg width="100%" height="100%" className="absolute inset-0">
+            <polyline
+              points={data.map((d, i) => {
+                const x = (i / (data.length - 1)) * 100;
+                const y = 100 - (((d[dataKey] - minValue) / range) * 80 + 10);
+                return `${x},${y}`;
+              }).join(' ')}
+              fill="none"
+              stroke={color}
+              strokeWidth="2"
+              className="drop-shadow-sm"
+            />
+            {data.map((d, i) => {
+              const x = (i / (data.length - 1)) * 100;
+              const y = 100 - (((d[dataKey] - minValue) / range) * 80 + 10);
+              return (
+                <circle
+                  key={i}
+                  cx={`${x}%`}
+                  cy={`${y}%`}
+                  r="3"
+                  fill={color}
+                  className="drop-shadow-sm"
+                />
+              );
+            })}
+          </svg>
+        </div>
+        <div className="flex justify-between text-xs text-gray-500">
+          <span>{data[0]?.date}</span>
+          <span>{data[data.length - 1]?.date}</span>
+        </div>
+        <div className="text-center text-xs text-gray-600 mt-1">
+          最大: {maxValue.toLocaleString()} | 最小: {minValue.toLocaleString()}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div className="mb-6">
@@ -320,12 +404,58 @@ const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders 
                 <div className="text-sm text-gray-800">平均注文金額</div>
               </Card>
             </div>
+            
+            {/* 複数日の場合は時系列グラフを表示 */}
+            {isMultipleDays && dailyData.length > 1 && (
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">日次推移グラフ</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <SimpleLineChart 
+                    data={dailyData} 
+                    dataKey="orders" 
+                    title="注文数推移" 
+                    color="#3B82F6" 
+                  />
+                  <SimpleLineChart 
+                    data={dailyData} 
+                    dataKey="revenue" 
+                    title="売上推移" 
+                    color="#10B981" 
+                  />
+                  <SimpleLineChart 
+                    data={dailyData} 
+                    dataKey="profit" 
+                    title="粗利推移" 
+                    color="#F59E0B" 
+                  />
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {activeTab === 'client-timeline' && (
           <div className="space-y-6">
             <h2 className="text-xl font-semibold text-gray-800">クライアント別時系列分析</h2>
+            
+            {/* 複数日の場合はクライアント別時系列グラフを表示 */}
+            {isMultipleDays && clientTimelineData.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">クライアント別売上推移</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {clientTimelineData.slice(0, 4).map((client) => (
+                    <SimpleLineChart 
+                      key={client.clientName}
+                      data={client.timeline} 
+                      dataKey="revenue" 
+                      title={`${client.clientName} 売上推移`} 
+                      color="#10B981" 
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            
             <div className="overflow-x-auto">
               <table className="w-full border-collapse border border-gray-300">
                 <thead>
@@ -356,6 +486,25 @@ const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders 
         {activeTab === 'product-timeline' && (
           <div className="space-y-6">
             <h2 className="text-xl font-semibold text-gray-800">商品別時系列分析</h2>
+            
+            {/* 複数日の場合は商品別時系列グラフを表示 */}
+            {isMultipleDays && productTimelineData.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">商品別売上推移</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {productTimelineData.slice(0, 6).map((product) => (
+                    <SimpleLineChart 
+                      key={product.productName}
+                      data={product.timeline} 
+                      dataKey="revenue" 
+                      title={`${product.productName} 売上推移`} 
+                      color="#8B5CF6" 
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            
             <div className="overflow-x-auto">
               <table className="w-full border-collapse border border-gray-300">
                 <thead>
