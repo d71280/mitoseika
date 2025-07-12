@@ -15,18 +15,23 @@ interface DeliverySlipPageProps {
 
 type ViewMode = 'list' | 'single' | 'batchToday';
 
+const getTodayDateString = (): string => {
+  const today = new Date();
+  // Adjust for timezone to ensure correct date in Japan (YYYY-MM-DD)
+  const year = today.getFullYear();
+  const month = (today.getMonth() + 1).toString().padStart(2, '0');
+  const day = today.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const DeliverySlipPage: React.FC<DeliverySlipPageProps> = ({ orders, companyInfo }) => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [ordersForBatchPrint, setOrdersForBatchPrint] = useState<Order[]>([]);
+  const [selectedDate, setSelectedDate] = useState<string>(getTodayDateString());
 
-  const getTodayDateString = (): string => {
-    const today = new Date();
-    // Adjust for timezone to ensure correct date in Japan (YYYY-MM-DD)
-    const year = today.getFullYear();
-    const month = (today.getMonth() + 1).toString().padStart(2, '0');
-    const day = today.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
+  const getFilteredOrders = (): Order[] => {
+    return orders.filter(order => order.issueDate === selectedDate);
   };
 
   const handleSelectOrder = (order: Order) => {
@@ -44,15 +49,14 @@ const DeliverySlipPage: React.FC<DeliverySlipPageProps> = ({ orders, companyInfo
     window.print();
   };
 
-  const handleBatchPrintToday = () => {
-    const todayStr = getTodayDateString();
-    const todayOrders = orders.filter(order => order.issueDate === todayStr);
+  const handleBatchPrintSelectedDate = () => {
+    const selectedOrders = getFilteredOrders();
 
-    if (todayOrders.length === 0) {
-      alert("本日発行対象の納品書はありません。");
+    if (selectedOrders.length === 0) {
+      alert(`${selectedDate}の納品書はありません。`);
       return;
     }
-    setOrdersForBatchPrint(todayOrders);
+    setOrdersForBatchPrint(selectedOrders);
     setSelectedOrder(null); 
     setViewMode('batchToday');
   };
@@ -84,7 +88,7 @@ const DeliverySlipPage: React.FC<DeliverySlipPageProps> = ({ orders, companyInfo
             <ArrowLeftIcon className="w-5 h-5 mr-2" />
             注文一覧へ戻る
           </Button>
-          <h1 className="text-2xl font-bold text-green-800">本日分納品書 一括プレビュー</h1>
+          <h1 className="text-2xl font-bold text-green-800">{selectedDate} 納品書 一括プレビュー</h1>
           <Button onClick={handlePrint} variant="primary" size="md">
             <PrinterIcon className="w-5 h-5 mr-2" />
             すべて印刷
@@ -102,31 +106,49 @@ const DeliverySlipPage: React.FC<DeliverySlipPageProps> = ({ orders, companyInfo
   }
 
   // viewMode === 'list'
+  const filteredOrders = getFilteredOrders();
+  
   return (
     <Card className="bg-white/90 backdrop-blur-sm shadow-2xl p-4 sm:p-6 rounded-xl">
-      <header className="mb-6 pb-4 border-b border-gray-300 flex flex-col sm:flex-row justify-between sm:items-center">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-green-800 flex items-center">
-            <PrinterIcon className="w-8 h-8 mr-3 text-green-700" />
-            納品書発行 - 注文選択
-          </h1>
-          <p className="text-sm text-gray-600 mt-1">納品書を作成する注文を選択するか、本日分を一括で印刷します。</p>
+      <header className="mb-6 pb-4 border-b border-gray-300">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-green-800 flex items-center">
+              <PrinterIcon className="w-8 h-8 mr-3 text-green-700" />
+              納品書発行 - 注文選択
+            </h1>
+            <p className="text-sm text-gray-600 mt-1">納品書を作成する注文を選択するか、選択した日付の分を一括で印刷します。</p>
+          </div>
         </div>
-        <Button 
-          onClick={handleBatchPrintToday} 
-          variant="primary" 
-          size="md"
-          className="mt-3 sm:mt-0"
-        >
-          <PrinterIcon className="w-5 h-5 mr-2" />
-          本日分を一括印刷
-        </Button>
+        <div className="mt-4 flex flex-col sm:flex-row gap-4 items-end">
+          <div className="flex-1">
+            <label htmlFor="date-filter" className="block text-sm font-medium text-gray-700 mb-1">
+              発行日で絞り込み
+            </label>
+            <input
+              id="date-filter"
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+          <Button 
+            onClick={handleBatchPrintSelectedDate} 
+            variant="primary" 
+            size="md"
+            className="w-full sm:w-auto"
+          >
+            <PrinterIcon className="w-5 h-5 mr-2" />
+            選択日の納品書を一括印刷
+          </Button>
+        </div>
       </header>
-      {orders.length === 0 ? (
-        <p className="text-gray-600">発行対象の注文がありません。</p>
+      {filteredOrders.length === 0 ? (
+        <p className="text-gray-600">{selectedDate}の注文がありません。</p>
       ) : (
         <div className="space-y-4">
-          {orders.map(order => (
+          {filteredOrders.map(order => (
             <Card key={order.id} className="bg-white p-4 shadow-md rounded-lg hover:shadow-lg transition-shadow">
               <div className="flex flex-col sm:flex-row justify-between sm:items-center">
                 <div>

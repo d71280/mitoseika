@@ -9,6 +9,7 @@ import { ChartBarIcon } from '../icons/ChartBarIcon';
 import { PrinterIcon } from '../icons/PrinterIcon';
 import { ArchiveBoxIcon } from '../icons/ArchiveBoxIcon'; // New icon for Inventory
 import { UserGroupIcon } from '../icons/UserGroupIcon'; // New icon for Client Management
+import { PresentationChartLineIcon } from '../icons/PresentationChartLineIcon'; // Icon for Order Analysis
 
 interface SidebarProps {
   currentPage: PageView;
@@ -18,10 +19,11 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ currentPage, navigateTo }) => {
   const navItems = [
     { page: PageView.DASHBOARD, label: 'ダッシュボード', icon: <HomeIcon className="w-6 h-6" /> },
-    { page: PageView.DETAILED_ANALYSIS, label: '詳細分析', icon: <DocumentTextIcon className="w-6 h-6" /> },
-    { page: PageView.CLIENT_MANAGEMENT, label: '顧客管理', icon: <UserGroupIcon className="w-6 h-6" /> }, // New item
-    { page: PageView.INVENTORY_MANAGEMENT, label: '在庫管理', icon: <ArchiveBoxIcon className="w-6 h-6" /> }, // New item
+    { page: PageView.CLIENT_MANAGEMENT, label: '顧客管理', icon: <UserGroupIcon className="w-6 h-6" /> },
+    { page: PageView.INVENTORY_MANAGEMENT, label: '在庫管理', icon: <ArchiveBoxIcon className="w-6 h-6" /> },
     { page: PageView.DELIVERY_SLIP, label: '納品書発行', icon: <PrinterIcon className="w-6 h-6" /> },
+    { page: PageView.ORDER_ANALYSIS, label: '注文分析', icon: <PresentationChartLineIcon className="w-6 h-6" /> },
+    { page: PageView.DETAILED_ANALYSIS, label: '詳細分析', icon: <DocumentTextIcon className="w-6 h-6" /> },
     { page: PageView.SUPPLIER_LIST, label: '仕入先一覧', icon: <UsersIcon className="w-6 h-6" /> },
     { page: PageView.SETTINGS, label: '設定', icon: <CogIcon className="w-6 h-6" /> },
   ];

@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
 // Supabase設定（実際の認証情報）
-const supabaseUrl = 'https://ijifjbbyyccwhghzvwsb.supabase.co'
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlqaWZqYmJ5eWNjd2hnaHp2d3NiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1OTYzNjcsImV4cCI6MjA2NzE3MjM2N30.1WDbqqSrcW4k82HwSf0uhuS-gQbqusrgFiEiY_qKehM'
+const supabaseUrl = 'https://exmpbeheepptuippyoby.supabase.co'
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4bXBiZWhlZXBwdHVpcHB5b2J5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyODg4NjksImV4cCI6MjA2Nzg2NDg2OX0.boGrurZvcoQmGVoBQPpAAw_tuXF3B4K4--I2rF_jqGA'
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
