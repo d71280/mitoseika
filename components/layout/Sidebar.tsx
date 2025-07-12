@@ -23,7 +23,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, navigateTo }) => {
     { page: PageView.INVENTORY_MANAGEMENT, label: '在庫管理', icon: <ArchiveBoxIcon className="w-6 h-6" /> },
     { page: PageView.ORDER_ANALYSIS, label: '注文分析', icon: <PresentationChartLineIcon className="w-6 h-6" /> },
     { page: PageView.DETAILED_ANALYSIS, label: '詳細分析', icon: <DocumentTextIcon className="w-6 h-6" /> },
-    { page: PageView.SUPPLIER_LIST, label: '仕入先一覧', icon: <UsersIcon className="w-6 h-6" /> },
+    { page: PageView.SUPPLIER_LIST, label: '仕入先管理', icon: <UsersIcon className="w-6 h-6" /> },
     { page: PageView.DELIVERY_SLIP, label: '納品書発行', icon: <PrinterIcon className="w-6 h-6" /> },
     { page: PageView.SETTINGS, label: '設定', icon: <CogIcon className="w-6 h-6" /> },
   ];
