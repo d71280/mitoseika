@@ -4,7 +4,6 @@ import { SummaryMetric } from '../../types';
 import SummaryCard from './SummaryCard';
 import { CurrencyYenIcon } from '../icons/CurrencyYenIcon';
 import { ClipboardListIcon } from '../icons/ClipboardListIcon';
-import { ExclamationTriangleIcon } from '../icons/ExclamationTriangleIcon';
 import { ChartBarIcon } from '../icons/ChartBarIcon';
 
 const SummarySection: React.FC = () => {
@@ -32,13 +31,6 @@ const SummarySection: React.FC = () => {
       change: '+15件',
       changeType: 'positive',
       icon: <ClipboardListIcon className="w-8 h-8 text-indigo-500" />,
-    },
-    {
-      id: 'warnings',
-      title: '警告商品',
-      value: '3品目',
-      changeType: 'neutral',
-      icon: <ExclamationTriangleIcon className="w-8 h-8 text-red-500" />,
     },
   ];
 

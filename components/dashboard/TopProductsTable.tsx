@@ -7,11 +7,11 @@ import { ArrowTrendingUpIcon } from '../icons/ArrowTrendingUpIcon'; // Re-using 
 
 const TopProductsTable: React.FC = () => {
   const topProducts: TopSellingProductData[] = [
-    { id: 'prod1', name: 'キャベツ', quantity: 45, unit: ProductUnit.ITEM, grossProfitAmount: 15400, grossProfitMargin: 25 },
-    { id: 'prod2', name: 'トマト', quantity: 32, unit: ProductUnit.BOX, grossProfitAmount: 12800, grossProfitMargin: 30 },
-    { id: 'prod3', name: 'レタス', quantity: 28, unit: ProductUnit.ITEM, grossProfitAmount: 8900, grossProfitMargin: 22 },
-    { id: 'prod4', name: 'ジャガイモ', quantity: 50, unit: ProductUnit.KILOGRAM, grossProfitAmount: 7200, grossProfitMargin: 20 },
-    { id: 'prod5', name: 'キュウリ', quantity: 35, unit: ProductUnit.BOX, grossProfitAmount: 6800, grossProfitMargin: 28 },
+    { id: 'prod1', name: 'キャベツ', quantity: 45, unit: ProductUnit.ITEM, grossProfitAmount: 15400, grossProfitMargin: 25, requiredOrderQuantity: 20 },
+    { id: 'prod2', name: 'トマト', quantity: 32, unit: ProductUnit.BOX, grossProfitAmount: 12800, grossProfitMargin: 30, requiredOrderQuantity: 15 },
+    { id: 'prod3', name: 'レタス', quantity: 28, unit: ProductUnit.ITEM, grossProfitAmount: 8900, grossProfitMargin: 22, requiredOrderQuantity: 30 },
+    { id: 'prod4', name: 'ジャガイモ', quantity: 50, unit: ProductUnit.KILOGRAM, grossProfitAmount: 7200, grossProfitMargin: 20, requiredOrderQuantity: 25 },
+    { id: 'prod5', name: 'キュウリ', quantity: 35, unit: ProductUnit.BOX, grossProfitAmount: 6800, grossProfitMargin: 28, requiredOrderQuantity: 10 },
   ];
 
   return (
@@ -27,7 +27,7 @@ const TopProductsTable: React.FC = () => {
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">商品</th>
               <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">数量</th>
               <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">粗利額</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">粗利率</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">必要発注数</th>
               <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">詳細</th>
             </tr>
           </thead>
@@ -37,7 +37,7 @@ const TopProductsTable: React.FC = () => {
                 <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{product.name}</td>
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-right">{product.quantity}{product.unit}</td>
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-right">¥{product.grossProfitAmount.toLocaleString()}</td>
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-right">{product.grossProfitMargin}%</td>
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-right">{product.requiredOrderQuantity}{product.unit}</td>
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-center">
                   <button className="text-green-600 hover:text-green-800 p-1 rounded-full hover:bg-green-100 transition-colors">
                     <ChevronRightIcon className="w-5 h-5" />

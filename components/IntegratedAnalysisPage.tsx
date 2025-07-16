@@ -12,7 +12,7 @@ interface IntegratedAnalysisPageProps {
   orders: Order[];
 }
 
-type AnalysisTab = 'overview' | 'purchase-analysis' | 'client-timeline' | 'product-timeline' | 'profit-cost';
+type AnalysisTab = 'overview' | 'purchase-analysis' | 'client-timeline' | 'product-timeline';
 
 interface TimeSeriesData {
   date: string;
@@ -221,7 +221,6 @@ const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders 
     { id: 'purchase-analysis', label: '仕入れ分析', icon: <ShoppingCartIcon className="w-5 h-5" /> },
     { id: 'client-timeline', label: 'クライアント分析', icon: <TableCellsIcon className="w-5 h-5" /> },
     { id: 'product-timeline', label: '商品分析', icon: <PresentationChartLineIcon className="w-5 h-5" /> },
-    { id: 'profit-cost', label: '粗利・原価分析', icon: <CurrencyYenIcon className="w-5 h-5" /> },
   ];
 
   const uniqueClients = Array.from(new Set(filteredOrders.map(order => order.clientName)));
@@ -365,7 +364,7 @@ const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders 
           <ChartBarIcon className="w-8 h-8 mr-3 text-green-700" />
           <h1 className="text-3xl font-bold text-green-800">統合分析</h1>
         </div>
-        <p className="text-gray-600">注文状況、クライアント・商品別時系列データ、粗利・原価推移を総合的に分析します</p>
+        <p className="text-gray-600">注文状況、クライアント・商品別時系列データを総合的に分析します</p>
       </div>
 
       {/* フィルター */}
@@ -725,35 +724,6 @@ const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders 
           </div>
         )}
 
-        {activeTab === 'profit-cost' && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-800">粗利・原価推移分析</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="p-4">
-                <h3 className="text-lg font-semibold mb-4">クライアント別粗利推移</h3>
-                <div className="space-y-2">
-                  {clientTimelineData.slice(0, 5).map((client) => (
-                    <div key={client.clientName} className="flex justify-between items-center">
-                      <span className="text-sm">{client.clientName}</span>
-                      <span className="text-sm font-medium">¥{Math.round(client.averageProfit * client.totalOrders).toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-              <Card className="p-4">
-                <h3 className="text-lg font-semibold mb-4">商品別原価推移</h3>
-                <div className="space-y-2">
-                  {productTimelineData.slice(0, 5).map((product) => (
-                    <div key={product.productName} className="flex justify-between items-center">
-                      <span className="text-sm">{product.productName}</span>
-                      <span className="text-sm font-medium">¥{Math.round(product.averageCost).toLocaleString()}/単位</span>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            </div>
-          </div>
-        )}
       </Card>
     </div>
   );

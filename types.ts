@@ -37,7 +37,8 @@ export interface TopSellingProductData {
   quantity: number;
   unit: ProductUnit;
   grossProfitAmount: number; 
-  grossProfitMargin: number; 
+  grossProfitMargin: number;
+  requiredOrderQuantity: number;
 }
 
 export interface Product {
