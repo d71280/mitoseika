@@ -219,8 +219,6 @@ const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders 
   const tabs = [
     { id: 'overview', label: '注文状況', icon: <ChartBarIcon className="w-5 h-5" /> },
     { id: 'purchase-analysis', label: '仕入れ分析', icon: <ShoppingCartIcon className="w-5 h-5" /> },
-    { id: 'client-timeline', label: 'クライアント分析', icon: <TableCellsIcon className="w-5 h-5" /> },
-    { id: 'product-timeline', label: '商品分析', icon: <PresentationChartLineIcon className="w-5 h-5" /> },
   ];
 
   const uniqueClients = Array.from(new Set(filteredOrders.map(order => order.clientName)));
@@ -464,8 +462,7 @@ const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders 
                         <th className="border border-gray-300 px-4 py-2 text-left">商品名</th>
                         <th className="border border-gray-300 px-4 py-2 text-right">総数量</th>
                         <th className="border border-gray-300 px-4 py-2 text-right">総売上</th>
-                        <th className="border border-gray-300 px-4 py-2 text-right">平均粗利/単位</th>
-                        <th className="border border-gray-300 px-4 py-2 text-right">平均原価/単位</th>
+                        <th className="border border-gray-300 px-4 py-2 text-right">粗利</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -481,8 +478,36 @@ const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders 
                           </td>
                           <td className="border border-gray-300 px-4 py-2 text-right">{product.totalQuantity.toLocaleString()}</td>
                           <td className="border border-gray-300 px-4 py-2 text-right">¥{product.totalRevenue.toLocaleString()}</td>
-                          <td className="border border-gray-300 px-4 py-2 text-right">¥{Math.round(product.averageProfit).toLocaleString()}</td>
-                          <td className="border border-gray-300 px-4 py-2 text-right">¥{Math.round(product.averageCost).toLocaleString()}</td>
+                          <td className="border border-gray-300 px-4 py-2 text-right">¥{Math.round(product.averageProfit * product.totalQuantity).toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* クライアント分析セクション */}
+            {clientTimelineData.length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">クライアント分析</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse border border-gray-300">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="border border-gray-300 px-4 py-2 text-left">クライアント名</th>
+                        <th className="border border-gray-300 px-4 py-2 text-right">総注文数</th>
+                        <th className="border border-gray-300 px-4 py-2 text-right">総売上</th>
+                        <th className="border border-gray-300 px-4 py-2 text-right">平均粗利/注文</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {clientTimelineData.slice(0, 10).map((client, index) => (
+                        <tr key={client.clientName} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                          <td className="border border-gray-300 px-4 py-2 font-medium">{client.clientName}</td>
+                          <td className="border border-gray-300 px-4 py-2 text-right">{client.totalOrders}回</td>
+                          <td className="border border-gray-300 px-4 py-2 text-right">¥{client.totalRevenue.toLocaleString()}</td>
+                          <td className="border border-gray-300 px-4 py-2 text-right">¥{Math.round(client.averageProfit).toLocaleString()}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -491,32 +516,6 @@ const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders 
               </div>
             )}
             
-            {/* 複数日の場合は時系列グラフを表示 */}
-            {isMultipleDays && dailyData.length > 1 && (
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">日次推移グラフ</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <SimpleLineChart 
-                    data={dailyData} 
-                    dataKey="orders" 
-                    title="注文数推移" 
-                    color="#3B82F6" 
-                  />
-                  <SimpleLineChart 
-                    data={dailyData} 
-                    dataKey="revenue" 
-                    title="売上推移" 
-                    color="#10B981" 
-                  />
-                  <SimpleLineChart 
-                    data={dailyData} 
-                    dataKey="profit" 
-                    title="粗利推移" 
-                    color="#F59E0B" 
-                  />
-                </div>
-              </div>
-            )}
           </div>
         )}
 
@@ -525,27 +524,6 @@ const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders 
             <h2 className="text-xl font-semibold text-gray-800">仕入れ分析</h2>
             <p className="text-gray-600 mb-4">在庫数を考慮した必要仕入数を表示します。安全在庫を含めた推奨仕入数量をご確認ください。</p>
             
-            {/* 仕入れサマリーカード */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <Card className="p-4 bg-orange-50">
-                <div className="text-2xl font-bold text-orange-600">
-                  {purchaseAnalysisData.filter(p => p.requiredPurchase > 0).length}
-                </div>
-                <div className="text-sm text-orange-800">要仕入れ商品数</div>
-              </Card>
-              <Card className="p-4 bg-red-50">
-                <div className="text-2xl font-bold text-red-600">
-                  {purchaseAnalysisData.reduce((sum, p) => sum + p.requiredPurchase, 0).toLocaleString()}
-                </div>
-                <div className="text-sm text-red-800">総必要仕入数</div>
-              </Card>
-              <Card className="p-4 bg-blue-50">
-                <div className="text-2xl font-bold text-blue-600">
-                  {purchaseAnalysisData.reduce((sum, p) => sum + p.currentStock, 0).toLocaleString()}
-                </div>
-                <div className="text-sm text-blue-800">現在の総在庫数</div>
-              </Card>
-            </div>
 
             {/* 必要仕入数一覧テーブル */}
             <div className="overflow-x-auto">
@@ -553,18 +531,15 @@ const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders 
                 <thead>
                   <tr className="bg-gray-50">
                     <th className="border border-gray-300 px-4 py-2 text-left">商品名</th>
+                    <th className="border border-gray-300 px-4 py-2 text-right">注文数</th>
                     <th className="border border-gray-300 px-4 py-2 text-right">現在在庫</th>
-                    <th className="border border-gray-300 px-4 py-2 text-right">期間内需要</th>
-                    <th className="border border-gray-300 px-4 py-2 text-right">平均注文数</th>
-                    <th className="border border-gray-300 px-4 py-2 text-right">注文頻度</th>
-                    <th className="border border-gray-300 px-4 py-2 text-right">必要仕入数</th>
-                    <th className="border border-gray-300 px-4 py-2 text-center">仕入れ優先度</th>
+                    <th className="border border-gray-300 px-4 py-2 text-right">要仕入数</th>
                   </tr>
                 </thead>
                 <tbody>
                   {purchaseAnalysisData.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="border border-gray-300 px-4 py-8 text-center text-gray-500">
+                      <td colSpan={4} className="border border-gray-300 px-4 py-8 text-center text-gray-500">
                         該当する仕入れデータがありません
                       </td>
                     </tr>
@@ -573,32 +548,15 @@ const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders 
                       <tr key={item.productName} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                         <td className="border border-gray-300 px-4 py-2 font-medium">{item.productName}</td>
                         <td className="border border-gray-300 px-4 py-2 text-right">
-                          {item.currentStock.toLocaleString()}{item.unit}
-                        </td>
-                        <td className="border border-gray-300 px-4 py-2 text-right">
-                          {item.totalDemand.toLocaleString()}{item.unit}
-                        </td>
-                        <td className="border border-gray-300 px-4 py-2 text-right">
-                          {Math.round(item.averageOrderQuantity).toLocaleString()}{item.unit}
-                        </td>
-                        <td className="border border-gray-300 px-4 py-2 text-right">
                           {item.orderFrequency}回
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2 text-right">
+                          {item.currentStock.toLocaleString()}{item.unit}
                         </td>
                         <td className="border border-gray-300 px-4 py-2 text-right">
                           <span className={item.requiredPurchase > 0 ? 'font-bold text-red-600' : 'text-green-600'}>
                             {item.requiredPurchase > 0 ? item.requiredPurchase.toLocaleString() : '0'}{item.unit}
                           </span>
-                        </td>
-                        <td className="border border-gray-300 px-4 py-2 text-center">
-                          {item.requiredPurchase > 50 ? (
-                            <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">高</span>
-                          ) : item.requiredPurchase > 20 ? (
-                            <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">中</span>
-                          ) : item.requiredPurchase > 0 ? (
-                            <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">低</span>
-                          ) : (
-                            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">安全</span>
-                          )}
                         </td>
                       </tr>
                     ))
@@ -626,103 +584,6 @@ const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders 
           </div>
         )}
 
-        {activeTab === 'client-timeline' && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-800">クライアント別時系列分析</h2>
-            
-            {/* 複数日の場合はクライアント別時系列グラフを表示 */}
-            {isMultipleDays && clientTimelineData.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">クライアント別売上推移</h3>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {clientTimelineData.slice(0, 4).map((client) => (
-                    <SimpleLineChart 
-                      key={client.clientName}
-                      data={client.timeline} 
-                      dataKey="revenue" 
-                      title={`${client.clientName} 売上推移`} 
-                      color="#10B981" 
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse border border-gray-300">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="border border-gray-300 px-4 py-2 text-left">クライアント名</th>
-                    <th className="border border-gray-300 px-4 py-2 text-right">総注文数</th>
-                    <th className="border border-gray-300 px-4 py-2 text-right">総売上</th>
-                    <th className="border border-gray-300 px-4 py-2 text-right">平均粗利/注文</th>
-                    <th className="border border-gray-300 px-4 py-2 text-center">期間中の注文頻度</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {clientTimelineData.map((client, index) => (
-                    <tr key={client.clientName} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="border border-gray-300 px-4 py-2 font-medium">{client.clientName}</td>
-                      <td className="border border-gray-300 px-4 py-2 text-right">{client.totalOrders}回</td>
-                      <td className="border border-gray-300 px-4 py-2 text-right">¥{client.totalRevenue.toLocaleString()}</td>
-                      <td className="border border-gray-300 px-4 py-2 text-right">¥{Math.round(client.averageProfit).toLocaleString()}</td>
-                      <td className="border border-gray-300 px-4 py-2 text-center">{client.timeline.length}日間</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'product-timeline' && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-800">商品別時系列分析</h2>
-            
-            {/* 複数日の場合は商品別時系列グラフを表示 */}
-            {isMultipleDays && productTimelineData.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">商品別売上推移</h3>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {productTimelineData.slice(0, 6).map((product) => (
-                    <SimpleLineChart 
-                      key={product.productName}
-                      data={product.timeline} 
-                      dataKey="revenue" 
-                      title={`${product.productName} 売上推移`} 
-                      color="#8B5CF6" 
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse border border-gray-300">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="border border-gray-300 px-4 py-2 text-left">商品名</th>
-                    <th className="border border-gray-300 px-4 py-2 text-right">総数量</th>
-                    <th className="border border-gray-300 px-4 py-2 text-right">総売上</th>
-                    <th className="border border-gray-300 px-4 py-2 text-right">平均粗利/単位</th>
-                    <th className="border border-gray-300 px-4 py-2 text-right">平均原価/単位</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {productTimelineData.map((product, index) => (
-                    <tr key={product.productName} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="border border-gray-300 px-4 py-2 font-medium">{product.productName}</td>
-                      <td className="border border-gray-300 px-4 py-2 text-right">{product.totalQuantity.toLocaleString()}</td>
-                      <td className="border border-gray-300 px-4 py-2 text-right">¥{product.totalRevenue.toLocaleString()}</td>
-                      <td className="border border-gray-300 px-4 py-2 text-right">¥{Math.round(product.averageProfit).toLocaleString()}</td>
-                      <td className="border border-gray-300 px-4 py-2 text-right">¥{Math.round(product.averageCost).toLocaleString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
 
       </Card>
     </div>
