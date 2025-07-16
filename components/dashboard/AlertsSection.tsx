@@ -10,29 +10,26 @@ const AlertsSection: React.FC = () => {
     {
       id: 'alert1',
       productName: 'キャベツ',
-      message: '仕入れが必要です',
-      actionText: '仕入先へ電話',
-      actionType: AlertActionType.CALL,
+      message: '15個',
+      unit: ProductUnit.ITEM,
     },
     {
       id: 'alert2',
       productName: 'トマト',
-      message: '仕入れが必要です',
-      actionText: '仕入先へ電話',
-      actionType: AlertActionType.CALL,
+      message: '8箱',
+      unit: ProductUnit.BOX,
     },
     {
       id: 'alert3',
       productName: 'レタス',
-      message: '仕入れが必要です',
-      actionText: '仕入先へ電話',
-      actionType: AlertActionType.CALL,
+      message: '22個',
+      unit: ProductUnit.ITEM,
     },
   ];
 
   // Filter to show only products that need ordering
   const productsNeedingOrders = alertItems.filter(item => 
-    item.message.includes('仕入れが必要')
+    item.message && item.productName
   );
 
   return (

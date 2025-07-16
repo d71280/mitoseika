@@ -39,21 +39,11 @@ const AlertItemDisplay: React.FC<AlertItemDisplayProps> = ({ item }) => {
 
 
   return (
-    <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between">
-      <div className="mb-2 sm:mb-0">
-        <span className="font-semibold text-red-700">{item.productName}：</span>
-        <span className="text-red-600">{item.message}</span>
+    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+      <div className="flex justify-between items-center">
+        <span className="font-semibold text-red-700">{item.productName}</span>
+        <span className="text-red-600 font-medium">{item.message}</span>
       </div>
-      {item.actionText && (
-        <Button 
-          size="sm" 
-          variant={getButtonVariant(item.actionType)}
-          className="w-full sm:w-auto flex-shrink-0"
-        >
-          {getIconForAction(item.actionType)}
-          {item.actionText}
-        </Button>
-      )}
     </div>
   );
 };
