@@ -10,34 +10,30 @@ const AlertsSection: React.FC = () => {
     {
       id: 'alert1',
       productName: 'キャベツ',
-      message: '在庫不足15個',
+      message: '仕入れが必要です',
       actionText: '仕入先へ電話',
       actionType: AlertActionType.CALL,
-      currentInventory: 10,
-      requiredOrder: 25,
-      unit: ProductUnit.ITEM,
     },
     {
       id: 'alert2',
       productName: 'トマト',
-      message: '異常注文量+200%',
-      actionText: '確認要',
-      actionType: AlertActionType.CONFIRM,
-      currentInventory: 5,
-      requiredOrder: 40,
-      unit: ProductUnit.BOX,
+      message: '仕入れが必要です',
+      actionText: '仕入先へ電話',
+      actionType: AlertActionType.CALL,
     },
     {
       id: 'alert3',
       productName: 'レタス',
-      message: '粗利率-5%低下',
-      actionText: '価格見直し',
-      actionType: AlertActionType.REVIEW,
-      currentInventory: 12,
-      requiredOrder: 30,
-      unit: ProductUnit.ITEM,
+      message: '仕入れが必要です',
+      actionText: '仕入先へ電話',
+      actionType: AlertActionType.CALL,
     },
   ];
+
+  // Filter to show only products that need ordering
+  const productsNeedingOrders = alertItems.filter(item => 
+    item.message.includes('仕入れが必要')
+  );
 
   return (
     <Card className="bg-white p-6 shadow-lg rounded-xl">
@@ -46,7 +42,7 @@ const AlertsSection: React.FC = () => {
         仕入れが必要な商品
       </h2>
       <div className="space-y-3">
-        {alertItems.map((item) => (
+        {productsNeedingOrders.map((item) => (
           <AlertItemDisplay key={item.id} item={item} />
         ))}
       </div>
