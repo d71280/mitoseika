@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { AlertItemData, AlertActionType } from '../../types';
+import { AlertItemData, AlertActionType, ProductUnit } from '../../types';
 import Card from '../ui/Card';
 import AlertItemDisplay from './AlertItemDisplay';
 import { ExclamationTriangleIcon } from '../icons/ExclamationTriangleIcon';
@@ -13,6 +13,9 @@ const AlertsSection: React.FC = () => {
       message: '在庫不足15個',
       actionText: '仕入先へ電話',
       actionType: AlertActionType.CALL,
+      currentInventory: 10,
+      requiredOrder: 25,
+      unit: ProductUnit.ITEM,
     },
     {
       id: 'alert2',
@@ -20,6 +23,9 @@ const AlertsSection: React.FC = () => {
       message: '異常注文量+200%',
       actionText: '確認要',
       actionType: AlertActionType.CONFIRM,
+      currentInventory: 5,
+      requiredOrder: 40,
+      unit: ProductUnit.BOX,
     },
     {
       id: 'alert3',
@@ -27,6 +33,9 @@ const AlertsSection: React.FC = () => {
       message: '粗利率-5%低下',
       actionText: '価格見直し',
       actionType: AlertActionType.REVIEW,
+      currentInventory: 12,
+      requiredOrder: 30,
+      unit: ProductUnit.ITEM,
     },
   ];
 
@@ -34,7 +43,7 @@ const AlertsSection: React.FC = () => {
     <Card className="bg-white p-6 shadow-lg rounded-xl">
       <h2 className="text-xl font-semibold text-gray-700 mb-4 flex items-center">
         <ExclamationTriangleIcon className="w-6 h-6 mr-2 text-red-600" />
-        緊急対応が必要な商品
+        仕入れが必要な商品
       </h2>
       <div className="space-y-3">
         {alertItems.map((item) => (

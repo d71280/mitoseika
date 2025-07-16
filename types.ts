@@ -29,6 +29,9 @@ export interface AlertItemData {
   message: string;
   actionText?: string;
   actionType?: AlertActionType;
+  currentInventory?: number;
+  requiredOrder?: number;
+  unit?: ProductUnit;
 }
 
 export interface TopSellingProductData {

@@ -1,7 +1,6 @@
 import React from 'react';
 import SummarySection from './dashboard/SummarySection';
 import AlertsSection from './dashboard/AlertsSection';
-import TopProductsTable from './dashboard/TopProductsTable';
 import PerformanceChartSection from './dashboard/PerformanceChartSection'; // New chart section
 import RealtimeOrdersSection from './dashboard/RealtimeOrdersSection'; // New realtime orders section
 import TestOrderForm from './dashboard/TestOrderForm'; // テスト用フォーム
@@ -32,7 +31,6 @@ const DashboardPage: React.FC = () => {
         <LineWebhookSimulator />
       </div>
       <AlertsSection />
-      <TopProductsTable />
 
       {/* Footer with navigation buttons removed */}
     </div>
