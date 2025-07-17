@@ -498,7 +498,7 @@ const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders 
                         <th className="border border-gray-300 px-4 py-2 text-left">クライアント名</th>
                         <th className="border border-gray-300 px-4 py-2 text-right">総注文数</th>
                         <th className="border border-gray-300 px-4 py-2 text-right">総売上</th>
-                        <th className="border border-gray-300 px-4 py-2 text-right">平均粗利/注文</th>
+                        <th className="border border-gray-300 px-4 py-2 text-right">粗利</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -507,7 +507,7 @@ const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders 
                           <td className="border border-gray-300 px-4 py-2 font-medium">{client.clientName}</td>
                           <td className="border border-gray-300 px-4 py-2 text-right">{client.totalOrders}回</td>
                           <td className="border border-gray-300 px-4 py-2 text-right">¥{client.totalRevenue.toLocaleString()}</td>
-                          <td className="border border-gray-300 px-4 py-2 text-right">¥{Math.round(client.averageProfit).toLocaleString()}</td>
+                          <td className="border border-gray-300 px-4 py-2 text-right">¥{Math.round(client.averageProfit * client.totalOrders).toLocaleString()}</td>
                         </tr>
                       ))}
                     </tbody>
