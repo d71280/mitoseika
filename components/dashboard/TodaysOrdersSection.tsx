@@ -15,65 +15,65 @@ const TodaysOrdersSection: React.FC = () => {
   const todaysOrders: OrderItem[] = [
     {
       id: '1',
-      productName: 'ジャガ苋（メークイン）',
+      productName: 'じゃがいも（メークイン）',
       orderCount: 1,
-      currentStock: 58,
-      requiredOrder: 67,
+      currentStock: 49,
+      requiredOrder: 76,
       unit: 'kg'
     },
     {
       id: '2',
-      productName: 'キャベツ',
+      productName: '人参',
       orderCount: 1,
-      currentStock: 23,
-      requiredOrder: 15,
-      unit: '個'
+      currentStock: 59,
+      requiredOrder: 16,
+      unit: 'kg'
     },
     {
       id: '3',
-      productName: 'トマト',
+      productName: 'キャベツ',
       orderCount: 1,
-      currentStock: 88,
+      currentStock: 98,
       requiredOrder: 0,
       unit: '個'
     },
     {
       id: '4',
-      productName: '大根',
+      productName: 'トマト',
       orderCount: 1,
-      currentStock: 78,
+      currentStock: 20,
       requiredOrder: 0,
       unit: '箱'
     },
     {
       id: '5',
-      productName: '白菜',
+      productName: '玉ねぎ',
       orderCount: 1,
-      currentStock: 60,
+      currentStock: 51,
       requiredOrder: 0,
       unit: 'kg'
     },
     {
       id: '6',
-      productName: '人参',
+      productName: 'レタス',
       orderCount: 1,
-      currentStock: 75,
+      currentStock: 104,
       requiredOrder: 0,
-      unit: 'kg'
+      unit: '個'
     },
     {
       id: '7',
-      productName: 'ブロッコリー',
+      productName: 'きゅうり',
       orderCount: 1,
-      currentStock: 81,
+      currentStock: 53,
       requiredOrder: 0,
       unit: 'ケース'
     },
     {
       id: '8',
-      productName: 'れんこん',
+      productName: '白菜',
       orderCount: 1,
-      currentStock: 25,
+      currentStock: 83,
       requiredOrder: 0,
       unit: '個'
     }
@@ -85,35 +85,35 @@ const TodaysOrdersSection: React.FC = () => {
         <ShoppingCartIcon className="w-6 h-6 mr-2 text-blue-600" />
         本日の注文一覧
       </h2>
-      <div className="space-y-3">
-        {todaysOrders.map((order) => (
-          <div key={order.id} className={`border-l-4 rounded p-4 transition-colors ${
-            order.requiredOrder > 0 
-              ? 'bg-red-50 border-red-600 hover:bg-red-100' 
-              : 'bg-gray-50 border-gray-300 hover:bg-gray-100'
-          }`}>
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium text-gray-800">{order.productName}</h3>
-              <div className="flex gap-6 items-center">
-                <span className="text-gray-700">
-                  注文数: <span className="font-medium">{order.orderCount}回</span>
-                </span>
-                <span className="text-gray-700">
-                  現在在庫: <span className="font-medium">{order.currentStock}{order.unit}</span>
-                </span>
-                <span className={`text-lg font-semibold ${
-                  order.requiredOrder > 0 ? 'text-red-600' : 'text-green-600'
-                }`}>
-                  要仕入数: {order.requiredOrder > 0 ? (
-                    <span>{order.requiredOrder}{order.unit}</span>
-                  ) : (
-                    <span>0{order.unit}</span>
-                  )}
-                </span>
-              </div>
-            </div>
-          </div>
-        ))}
+      <div className="overflow-x-auto">
+        <table className="min-w-full border-collapse">
+          <thead>
+            <tr>
+              <th className="border border-gray-300 bg-gray-100 py-3 px-4 text-left font-medium text-gray-700">商品名</th>
+              <th className="border border-gray-300 bg-gray-100 py-3 px-4 text-center font-medium text-gray-700">注文数</th>
+              <th className="border border-gray-300 bg-gray-100 py-3 px-4 text-center font-medium text-gray-700">現在在庫</th>
+              <th className="border border-gray-300 bg-gray-100 py-3 px-4 text-center font-medium text-gray-700">要仕入数</th>
+            </tr>
+          </thead>
+          <tbody>
+            {todaysOrders.map((order) => (
+              <tr key={order.id} className="hover:bg-gray-50">
+                <td className="border border-gray-300 py-3 px-4 text-gray-800">{order.productName}</td>
+                <td className="border border-gray-300 py-3 px-4 text-center text-gray-700">
+                  {order.orderCount}回
+                </td>
+                <td className="border border-gray-300 py-3 px-4 text-center text-gray-700">
+                  {order.currentStock}{order.unit}
+                </td>
+                <td className="border border-gray-300 py-3 px-4 text-center">
+                  <span className={`font-semibold ${order.requiredOrder > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                    {order.requiredOrder > 0 ? `${order.requiredOrder}${order.unit}` : `0${order.unit}`}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </Card>
   );
