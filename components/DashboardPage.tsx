@@ -5,6 +5,7 @@ import PerformanceChartSection from './dashboard/PerformanceChartSection'; // Ne
 import RealtimeOrdersSection from './dashboard/RealtimeOrdersSection'; // New realtime orders section
 import TestOrderForm from './dashboard/TestOrderForm'; // テスト用フォーム
 import { LineWebhookSimulator } from './dashboard/LineWebhookSimulator'; // LINE Bot シミュレーター
+import TodaysOrdersSection from './dashboard/TodaysOrdersSection'; // 本日の注文一覧
 import Card from './ui/Card';
 // PageView and Button imports are removed as navigation is handled by Sidebar
 
@@ -25,6 +26,7 @@ const DashboardPage: React.FC = () => {
       {/* The outer Card wrapper is removed to allow individual section Cards to have their own styling within the page flow */}
       <SummarySection />
       <PerformanceChartSection /> 
+      <TodaysOrdersSection />
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         <RealtimeOrdersSection />
         <TestOrderForm />
