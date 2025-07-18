@@ -10,19 +10,19 @@ const AlertsSection: React.FC = () => {
     {
       id: 'alert1',
       productName: 'キャベツ',
-      message: '15個',
+      message: '注文数: 50個 / 在庫数: 35個 / 要仕入数: 15個',
       unit: ProductUnit.ITEM,
     },
     {
       id: 'alert2',
       productName: 'トマト',
-      message: '8箱',
+      message: '注文数: 30箱 / 在庫数: 22箱 / 要仕入数: 8箱',
       unit: ProductUnit.BOX,
     },
     {
       id: 'alert3',
       productName: 'レタス',
-      message: '22個',
+      message: '注文数: 40個 / 在庫数: 18個 / 要仕入数: 22個',
       unit: ProductUnit.ITEM,
     },
   ];
