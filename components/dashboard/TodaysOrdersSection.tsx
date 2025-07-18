@@ -5,7 +5,7 @@ import { ShoppingCartIcon } from '../icons/ShoppingCartIcon';
 interface OrderItem {
   id: string;
   productName: string;
-  orderCount: number;
+  orderQuantity: number;
   currentStock: number;
   requiredOrder: number;
   unit: string;
@@ -16,7 +16,7 @@ const TodaysOrdersSection: React.FC = () => {
     {
       id: '1',
       productName: 'じゃがいも（メークイン）',
-      orderCount: 1,
+      orderQuantity: 125,
       currentStock: 49,
       requiredOrder: 76,
       unit: 'kg'
@@ -24,7 +24,7 @@ const TodaysOrdersSection: React.FC = () => {
     {
       id: '2',
       productName: '人参',
-      orderCount: 1,
+      orderQuantity: 75,
       currentStock: 59,
       requiredOrder: 16,
       unit: 'kg'
@@ -32,7 +32,7 @@ const TodaysOrdersSection: React.FC = () => {
     {
       id: '3',
       productName: 'キャベツ',
-      orderCount: 1,
+      orderQuantity: 98,
       currentStock: 98,
       requiredOrder: 0,
       unit: '個'
@@ -40,7 +40,7 @@ const TodaysOrdersSection: React.FC = () => {
     {
       id: '4',
       productName: 'トマト',
-      orderCount: 1,
+      orderQuantity: 20,
       currentStock: 20,
       requiredOrder: 0,
       unit: '箱'
@@ -48,7 +48,7 @@ const TodaysOrdersSection: React.FC = () => {
     {
       id: '5',
       productName: '玉ねぎ',
-      orderCount: 1,
+      orderQuantity: 51,
       currentStock: 51,
       requiredOrder: 0,
       unit: 'kg'
@@ -56,7 +56,7 @@ const TodaysOrdersSection: React.FC = () => {
     {
       id: '6',
       productName: 'レタス',
-      orderCount: 1,
+      orderQuantity: 104,
       currentStock: 104,
       requiredOrder: 0,
       unit: '個'
@@ -64,7 +64,7 @@ const TodaysOrdersSection: React.FC = () => {
     {
       id: '7',
       productName: 'きゅうり',
-      orderCount: 1,
+      orderQuantity: 53,
       currentStock: 53,
       requiredOrder: 0,
       unit: 'ケース'
@@ -72,7 +72,7 @@ const TodaysOrdersSection: React.FC = () => {
     {
       id: '8',
       productName: '白菜',
-      orderCount: 1,
+      orderQuantity: 83,
       currentStock: 83,
       requiredOrder: 0,
       unit: '個'
@@ -100,7 +100,7 @@ const TodaysOrdersSection: React.FC = () => {
               <tr key={order.id} className="hover:bg-gray-50">
                 <td className="border border-gray-300 py-3 px-4 text-gray-800">{order.productName}</td>
                 <td className="border border-gray-300 py-3 px-4 text-center text-gray-700">
-                  {order.orderCount}回
+                  {order.orderQuantity}{order.unit}
                 </td>
                 <td className="border border-gray-300 py-3 px-4 text-center text-gray-700">
                   {order.currentStock}{order.unit}
