@@ -307,18 +307,18 @@ app.get('/api/customers/:customerId', async (req, res) => {
 // 商品追加
 app.post('/api/products', async (req, res) => {
   try {
-    const { name, price, unit, category, description } = req.body
+    const { name, unit, category, description } = req.body
 
-    if (!name || !price || !unit) {
+    if (!name || !unit) {
       return res.status(400).json({
         success: false,
-        error: '商品名、価格、単位は必須です'
+        error: '商品名、単位は必須です'
       })
     }
 
     const { data, error } = await supabase
       .from('products')
-      .insert([{ name, price, unit, category, description }])
+      .insert([{ name, unit, category, description }])
       .select()
 
     if (error) {
@@ -348,11 +348,11 @@ app.post('/api/products', async (req, res) => {
 app.put('/api/products/:id', async (req, res) => {
   try {
     const { id } = req.params
-    const { name, price, unit, category, description } = req.body
+    const { name, unit, category, description } = req.body
 
     const { data, error } = await supabase
       .from('products')
-      .update({ name, price, unit, category, description })
+      .update({ name, unit, category, description })
       .eq('id', id)
       .select()
 

@@ -8,7 +8,6 @@ import { TrashIcon } from './icons/TrashIcon';
 interface Product {
   id: number;
   name: string;
-  price: number;
   unit: string;
   category?: string;
   description?: string;
@@ -17,7 +16,6 @@ interface Product {
 
 interface ProductFormData {
   name: string;
-  price: string;
   unit: string;
   category: string;
   description: string;
@@ -30,7 +28,6 @@ const ProductMasterPage: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
-    price: '',
     unit: '',
     category: '',
     description: ''
@@ -69,7 +66,6 @@ const ProductMasterPage: React.FC = () => {
   const resetForm = () => {
     setFormData({
       name: '',
-      price: '',
       unit: '',
       category: '',
       description: ''
@@ -88,7 +84,6 @@ const ProductMasterPage: React.FC = () => {
   const handleEdit = (product: Product) => {
     setFormData({
       name: product.name,
-      price: product.price.toString(),
       unit: product.unit,
       category: product.category || '',
       description: product.description || ''
@@ -101,8 +96,8 @@ const ProductMasterPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.price || !formData.unit) {
-      alert('商品名、価格、単位は必須です');
+    if (!formData.name || !formData.unit) {
+      alert('商品名、単位は必須です');
       return;
     }
 
@@ -120,7 +115,6 @@ const ProductMasterPage: React.FC = () => {
         },
         body: JSON.stringify({
           name: formData.name,
-          price: parseFloat(formData.price),
           unit: formData.unit,
           category: formData.category || null,
           description: formData.description || null
@@ -203,7 +197,6 @@ const ProductMasterPage: React.FC = () => {
               <thead>
                 <tr className="border-b">
                   <th className="text-left py-2 px-4">商品名</th>
-                  <th className="text-left py-2 px-4">価格</th>
                   <th className="text-left py-2 px-4">単位</th>
                   <th className="text-left py-2 px-4">カテゴリ</th>
                   <th className="text-left py-2 px-4">説明</th>
@@ -214,7 +207,6 @@ const ProductMasterPage: React.FC = () => {
                 {products.map((product) => (
                   <tr key={product.id} className="border-b hover:bg-gray-50">
                     <td className="py-3 px-4 font-medium">{product.name}</td>
-                    <td className="py-3 px-4">¥{product.price.toLocaleString()}</td>
                     <td className="py-3 px-4">{product.unit}</td>
                     <td className="py-3 px-4">{product.category || '-'}</td>
                     <td className="py-3 px-4 max-w-xs truncate">{product.description || '-'}</td>
@@ -263,22 +255,6 @@ const ProductMasterPage: React.FC = () => {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                   placeholder="例: キャベツ"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  価格 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="例: 150"
-                  min="0"
-                  step="0.01"
                   required
                 />
               </div>

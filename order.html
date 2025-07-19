@@ -170,7 +170,22 @@
             font-size: 16px;
         }
         
-        .unit {
+        .price-input {
+            width: 100px;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 16px;
+        }
+        
+        .unit, .yen {
+            font-size: 14px;
+            color: #6b7280;
+            margin: 0 4px;
+        }
+        
+        .product-unit {
             font-size: 14px;
             color: #6b7280;
         }
@@ -361,7 +376,7 @@
                 <div class="product-item">
                     <div class="product-header">
                         <div class="product-name">${product.name}</div>
-                        <div class="product-price">¥${product.price.toLocaleString()}/${product.unit}</div>
+                        <div class="product-unit">単位: ${product.unit}</div>
                     </div>
                     <div class="quantity-controls">
                         <input 
@@ -371,9 +386,21 @@
                             min="0" 
                             step="1" 
                             value="0"
+                            placeholder="数量"
                             onchange="updateQuantity(${product.id}, this.value)"
                         >
                         <span class="unit">${product.unit}</span>
+                        <input 
+                            type="number" 
+                            class="price-input" 
+                            id="price-${product.id}" 
+                            min="0" 
+                            step="0.01" 
+                            value="0"
+                            placeholder="単価"
+                            onchange="updateQuantity(${product.id}, document.getElementById('quantity-${product.id}').value)"
+                        >
+                        <span class="yen">円</span>
                         <span class="subtotal" id="subtotal-${product.id}">-</span>
                     </div>
                 </div>
@@ -418,13 +445,14 @@
         // 数量更新
         function updateQuantity(productId, quantity) {
             const qty = parseInt(quantity) || 0;
-            productQuantities[productId] = qty;
+            const price = parseFloat(document.getElementById(`price-${productId}`).value) || 0;
             
-            const product = products.find(p => p.id === productId);
+            productQuantities[productId] = { quantity: qty, price: price };
+            
             const subtotalElement = document.getElementById(`subtotal-${productId}`);
             
-            if (qty > 0 && product) {
-                const subtotal = qty * product.price;
+            if (qty > 0 && price > 0) {
+                const subtotal = qty * price;
                 subtotalElement.textContent = `¥${subtotal.toLocaleString()}`;
             } else {
                 subtotalElement.textContent = '-';
@@ -438,12 +466,9 @@
         function updateTotal() {
             let total = 0;
             
-            for (const [productId, quantity] of Object.entries(productQuantities)) {
-                if (quantity > 0) {
-                    const product = products.find(p => p.id === parseInt(productId));
-                    if (product) {
-                        total += quantity * product.price;
-                    }
+            for (const [productId, item] of Object.entries(productQuantities)) {
+                if (item && item.quantity > 0 && item.price > 0) {
+                    total += item.quantity * item.price;
                 }
             }
             
@@ -453,7 +478,7 @@
         // 送信ボタン更新
         function updateSubmitButton() {
             const button = document.querySelector('.submit-button');
-            const hasItems = Object.values(productQuantities).some(qty => qty > 0);
+            const hasItems = Object.values(productQuantities).some(item => item && item.quantity > 0);
             const hasCustomer = selectedCustomer !== null;
             
             button.disabled = !hasItems || !hasCustomer;
@@ -467,15 +492,15 @@
             }
             
             const orderItems = [];
-            for (const [productId, quantity] of Object.entries(productQuantities)) {
-                if (quantity > 0) {
+            for (const [productId, item] of Object.entries(productQuantities)) {
+                if (item && item.quantity > 0 && item.price > 0) {
                     const product = products.find(p => p.id === parseInt(productId));
                     if (product) {
                         orderItems.push({
                             product_id: parseInt(productId),
                             product_name: product.name,
-                            quantity: quantity,
-                            unit_price: product.price,
+                            quantity: item.quantity,
+                            unit_price: item.price,
                             unit: product.unit
                         });
                     }
