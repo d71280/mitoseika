@@ -14,10 +14,9 @@ interface InventoryManagementPageProps {
 
 const InventoryManagementPage: React.FC<InventoryManagementPageProps> = ({ products, navigateTo }) => {
   
-  const getStockLevelClass = (currentStock?: number, lowStockThreshold?: number): string => {
-    if (typeof currentStock === 'number' && typeof lowStockThreshold === 'number') {
+  const getStockLevelClass = (currentStock?: number): string => {
+    if (typeof currentStock === 'number') {
       if (currentStock <= 0) return 'text-red-700 bg-red-100 font-bold';
-      if (currentStock <= lowStockThreshold) return 'text-yellow-700 bg-yellow-100 font-semibold';
     }
     return 'text-gray-900';
   };
@@ -56,23 +55,20 @@ const InventoryManagementPage: React.FC<InventoryManagementPageProps> = ({ produ
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">カテゴリ</th>
                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">現在在庫</th>
                 <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">単位</th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">警告しきい値</th>
                 <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {products.map((product) => (
                 <tr key={product.id} className={`hover:bg-slate-50 transition-colors ${
-                    (product.currentStock ?? 0) <= (product.lowStockThreshold ?? Infinity) && (product.currentStock ?? 0) > 0 ? 'bg-yellow-50 hover:bg-yellow-100' : 
                     (product.currentStock ?? 0) <= 0 ? 'bg-red-50 hover:bg-red-100' : ''
                   }`}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{product.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{product.category}</td>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm text-right ${getStockLevelClass(product.currentStock, product.lowStockThreshold)}`}>
+                  <td className={`px-6 py-4 whitespace-nowrap text-sm text-right ${getStockLevelClass(product.currentStock)}`}>
                     {product.currentStock ?? 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">{product.unit}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-right">{product.lowStockThreshold ?? 'N/A'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                     <Button 
                         variant="ghost" 
@@ -91,8 +87,7 @@ const InventoryManagementPage: React.FC<InventoryManagementPageProps> = ({ produ
         </div>
       )}
       <p className="text-xs text-gray-500 mt-4">
-        <span className="inline-block w-3 h-3 bg-yellow-100 border border-yellow-300 mr-1 align-middle"></span> 在庫僅少 (しきい値以下)
-        <span className="inline-block w-3 h-3 bg-red-100 border border-red-300 mr-1 ml-3 align-middle"></span> 在庫切れ
+        <span className="inline-block w-3 h-3 bg-red-100 border border-red-300 mr-1 align-middle"></span> 在庫切れ
       </p>
     </Card>
   );
