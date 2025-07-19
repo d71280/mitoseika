@@ -101,35 +101,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigateTo }) => {
           <p className="text-xs text-gray-500 mt-1">取扱商品の追加、編集、価格設定などを行います。</p>
         </SettingCategory>
 
-        {/* アラート条件設定 */}
-        <SettingCategory title="アラート条件設定" icon={<BellAlertIcon className="w-6 h-6 text-red-500" />}>
-          <div className="space-y-3">
-            <div className="flex items-center space-x-2">
-              <label htmlFor="lowStockThreshold" className="text-sm font-medium text-gray-700 whitespace-nowrap">在庫不足 (しきい値):</label>
-              <input
-                type="number"
-                id="lowStockThreshold"
-                value={settings.lowStockThreshold}
-                onChange={(e) => handleInputChange('lowStockThreshold', parseInt(e.target.value,10))}
-                className="mt-1 block w-20 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-              />
-              <span className="text-sm text-gray-600">個以下</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <label htmlFor="abnormalOrderPercentage" className="text-sm font-medium text-gray-700 whitespace-nowrap">異常注文 (変動率):</label>
-              <input
-                type="number"
-                id="abnormalOrderPercentage"
-                value={settings.abnormalOrderPercentage}
-                onChange={(e) => handleInputChange('abnormalOrderPercentage', parseInt(e.target.value,10))}
-                className="mt-1 block w-20 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-              />
-              <span className="text-sm text-gray-600"> % 以上 (前日比)</span>
-            </div>
-          </div>
-          <Button size="sm" onClick={() => handleSave('アラート条件')} className="mt-3">条件を保存</Button>
-          <p className="text-xs text-gray-500 mt-1">在庫不足や異常注文量のアラート発生条件を設定します。</p>
-        </SettingCategory>
 
         {/* ダッシュボード表示項目 */}
         <SettingCategory title="ダッシュボード表示項目設定" icon={<PresentationChartLineIcon className="w-6 h-6 text-indigo-500" />}>

@@ -5,6 +5,22 @@ import Button from './ui/Button';
 import { Client } from '../types';
 import { UserGroupIcon } from './icons/UserGroupIcon';
 import { ArrowLeftIcon } from './icons/ArrowLeftIcon';
+import { PlusCircleIcon } from './icons/PlusCircleIcon';
+import { TrashIcon } from './icons/TrashIcon';
+
+interface Product {
+  id: string;
+  name: string;
+  unit: string;
+  category?: string;
+}
+
+interface ProductPrice {
+  productId: string;
+  productName: string;
+  unit: string;
+  price: number;
+}
 
 interface ClientEditPageProps {
   clientId: string | 'new';
@@ -25,12 +41,42 @@ const ClientEditPage: React.FC<ClientEditPageProps> = ({ clientId, existingClien
     ruleSummary: '',
   });
   const [errors, setErrors] = useState<Partial<Record<keyof Client, string>>>({});
+  const [products, setProducts] = useState<Product[]>([]);
+  const [productPrices, setProductPrices] = useState<ProductPrice[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? `http://${window.location.hostname}:3001`
+    : window.location.origin;
+
+  // 商品データを取得
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/products`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setProducts(data.products || []);
+      } else {
+        console.error('商品取得エラー:', data.error);
+      }
+    } catch (error) {
+      console.error('商品取得エラー:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   useEffect(() => {
     if (!isNewClient) {
       const currentClient = existingClients.find(c => c.id === clientId);
       if (currentClient) {
         setClientData(currentClient);
+        // TODO: Load existing product prices for this client
       } else {
         // Handle case where client ID is not found, though ideally App.tsx prevents this
         console.error(`Client with ID ${clientId} not found.`);
@@ -57,6 +103,38 @@ const ClientEditPage: React.FC<ClientEditPageProps> = ({ clientId, existingClien
     const nextId = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
     const customerId = nextId.toString().padStart(4, '0');
     setClientData(prev => ({ ...prev, customerId }));
+  };
+
+  // 商品価格追加
+  const addProductPrice = (productId: string) => {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    const existingPrice = productPrices.find(pp => pp.productId === productId);
+    if (existingPrice) return; // Already added
+
+    const newPrice: ProductPrice = {
+      productId: product.id,
+      productName: product.name,
+      unit: product.unit,
+      price: 0
+    };
+
+    setProductPrices(prev => [...prev, newPrice]);
+  };
+
+  // 商品価格更新
+  const updateProductPrice = (productId: string, price: number) => {
+    setProductPrices(prev => 
+      prev.map(pp => 
+        pp.productId === productId ? { ...pp, price } : pp
+      )
+    );
+  };
+
+  // 商品価格削除
+  const removeProductPrice = (productId: string) => {
+    setProductPrices(prev => prev.filter(pp => pp.productId !== productId));
   };
 
   const validate = (): boolean => {
@@ -198,6 +276,105 @@ const ClientEditPage: React.FC<ClientEditPageProps> = ({ clientId, existingClien
             placeholder="例: キャベツは1個=6玉入り1箱として計算。トマトは赤熟指定。"
           />
         </FormField>
+
+        {/* 商品別価格設定 */}
+        <div className="pt-6 border-t border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">商品別価格設定</h3>
+          
+          {loading ? (
+            <div className="text-center py-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mx-auto"></div>
+              <p className="mt-2 text-sm text-gray-600">商品を読み込み中...</p>
+            </div>
+          ) : (
+            <>
+              {/* 商品追加セレクト */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  商品を追加
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    id="product-select"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
+                    defaultValue=""
+                  >
+                    <option value="">商品を選択してください</option>
+                    {products
+                      .filter(product => !productPrices.find(pp => pp.productId === product.id))
+                      .map(product => (
+                        <option key={product.id} value={product.id}>
+                          {product.name} ({product.unit})
+                        </option>
+                      ))
+                    }
+                  </select>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => {
+                      const select = document.getElementById('product-select') as HTMLSelectElement;
+                      if (select.value) {
+                        addProductPrice(select.value);
+                        select.value = '';
+                      }
+                    }}
+                  >
+                    <PlusCircleIcon className="w-4 h-4 mr-1" />
+                    追加
+                  </Button>
+                </div>
+              </div>
+
+              {/* 設定済み商品価格一覧 */}
+              {productPrices.length > 0 ? (
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-gray-700">設定済み商品価格</h4>
+                  {productPrices.map(productPrice => (
+                    <div key={productPrice.productId} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900">{productPrice.productName}</div>
+                        <div className="text-sm text-gray-500">単位: {productPrice.unit}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          value={productPrice.price}
+                          onChange={(e) => updateProductPrice(productPrice.productId, parseFloat(e.target.value) || 0)}
+                          className="w-24 px-2 py-1 border border-gray-300 rounded text-right text-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                          placeholder="0"
+                          min="0"
+                          step="0.01"
+                        />
+                        <span className="text-sm text-gray-600">円</span>
+                        <button
+                          type="button"
+                          onClick={() => removeProductPrice(productPrice.productId)}
+                          className="p-1 text-red-600 hover:text-red-800"
+                          title="削除"
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-gray-500">
+                  <p>まだ商品価格が設定されていません</p>
+                  <p className="text-sm mt-1">上記のセレクトボックスから商品を追加してください</p>
+                </div>
+              )}
+
+              {products.length === 0 && (
+                <div className="text-center py-6 text-gray-500">
+                  <p>商品マスタに商品が登録されていません</p>
+                  <p className="text-sm mt-1">商品マスタページから商品を登録してください</p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
 
         <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
           <Button type="button" variant="secondary" onClick={onCancel}>
