@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vercel公開テスト</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .success {
+            color: #22c55e;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .info {
+            background: #e0f2fe;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success">✅ Vercel公開成功！</div>
+        
+        <div class="info">
+            <h3>確認事項</h3>
+            <p><strong>現在のURL:</strong> <span id="current-url"></span></p>
+            <p><strong>アクセス時刻:</strong> <span id="access-time"></span></p>
+            <p><strong>ログイン要求:</strong> なし（このページが見えています）</p>
+        </div>
+        
+        <div class="info">
+            <h3>LIFF設定確認</h3>
+            <p>この確認ページが表示されているということは、Vercelの公開設定は正常に動作しています。</p>
+            <p><strong>問題:</strong> LIFF経由でアクセスした時のみログインが求められる可能性があります。</p>
+        </div>
+        
+        <div class="info">
+            <h3>次の手順</h3>
+            <ol>
+                <li>この確認ページが正常に表示されることを確認</li>
+                <li>LIFF URLでアクセスしてLINE認証のみが動作することを確認</li>
+                <li>Vercelログイン画面が表示されないことを確認</li>
+            </ol>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="./liff.html" style="background: #10b981; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                LIFF版注文フォームへ
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('current-url').textContent = window.location.href;
+        document.getElementById('access-time').textContent = new Date().toLocaleString('ja-JP');
+        
+        // コンソールログ出力
+        console.log('Vercel公開確認ページ表示成功');
+        console.log('URL:', window.location.href);
+        console.log('時刻:', new Date().toLocaleString('ja-JP'));
+    </script>
+</body>
+</html>
