@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水戸青果 - 注文システム（LIFF版）</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://unpkg.com/react@19/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@19/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .liff-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f0fdf4 0%, #eff6ff 100%);
+        }
+        
+        .print-hidden {
+            display: block;
+        }
+        
+        @media print {
+            .print-hidden {
+                display: none !important;
+            }
+            
+            body {
+                background: white !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="liff-app" class="liff-container"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Product data
+        const products = [
+            { id: 'prod_cabbage', name: 'キャベツ', unit: '個', salePrice: 150 },
+            { id: 'prod_cucumber', name: 'きゅうり', unit: 'ケース', salePrice: 2000 },
+            { id: 'prod_hakusai', name: '白菜', unit: '個', salePrice: 300 },
+            { id: 'prod_carrot', name: '人参', unit: 'kg', salePrice: 250 },
+            { id: 'prod_daikon', name: '大根', unit: '個', salePrice: 160 },
+            { id: 'prod_lettuce', name: 'レタス', unit: '個', salePrice: 180 },
+            { id: 'prod_potato', name: 'じゃがいも（メークイン）', unit: 'kg', salePrice: 200 },
+            { id: 'prod_tomato', name: 'トマト', unit: '箱', salePrice: 1200 },
+            { id: 'prod_onion', name: '玉ねぎ', unit: 'kg', salePrice: 300 }
+        ].sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+
+        // Client data
+        const clients = [
+            { id: 'client_AStore', customerId: '0001', companyName: 'A商店', contactPerson: '山田 太郎', phone: '03-1234-5678', address: '東京都渋谷区渋谷1-2-3 Aビル101号室' },
+            { id: 'client_BDiner', customerId: '0002', companyName: 'B食堂', contactPerson: '佐藤 花子', phone: '03-9876-5432', address: '東京都新宿区新宿4-5-6 Bプラザ地下1階' },
+            { id: 'client_CVegeShop', customerId: '0003', companyName: 'C青果店', contactPerson: '田中 一郎', phone: '029-111-2222', address: '茨城県水戸市駅南2-3-4 Cマーケット内' },
+            { id: 'client_NewHotel', customerId: '0004', companyName: '水戸ニューホテル', contactPerson: '鈴木 次郎', phone: '029-333-4444', address: '茨城県水戸市中央1-10-1' }
+        ];
+
+        // LIFF Status Component
+        const LiffStatus = ({ isLiffReady }) => (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <div className="flex items-center">
+                    <div className={`w-3 h-3 rounded-full mr-2 ${isLiffReady ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                    <span className="text-sm text-blue-800">
+                        {isLiffReady ? 'LINE内で利用中' : 'LIFF初期化中...'}
+                    </span>
+                </div>
+            </div>
+        );
+
+        // Button component
+        const Button = ({ children, onClick, variant = 'primary', disabled = false, className = '', type = 'button' }) => {
+            const baseClasses = 'px-4 py-2 rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2';
+            const variantClasses = {
+                primary: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 disabled:bg-gray-300',
+                secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-500',
+                danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500'
+            };
+
+            return (
+                <button
+                    type={type}
+                    onClick={onClick}
+                    disabled={disabled}
+                    className={`${baseClasses} ${variantClasses[variant]} ${className} ${disabled ? 'cursor-not-allowed' : ''}`}
+                >
+                    {children}
+                </button>
+            );
+        };
+
+        // Card component
+        const Card = ({ children, className = '' }) => {
+            return (
+                <div className={`bg-white rounded-lg shadow-lg ${className}`}>
+                    {children}
+                </div>
+            );
+        };
+
+        // LIFF Order Form Component
+        const LiffOrderForm = ({ onSubmitOrder, isLiffReady }) => {
+            const [customerId, setCustomerId] = useState('');
+            const [selectedClient, setSelectedClient] = useState(null);
+            const [productQuantities, setProductQuantities] = useState({});
+            const [error, setError] = useState('');
+
+            useEffect(() => {
+                if (customerId) {
+                    const client = clients.find(c => c.customerId === customerId);
+                    if (client) {
+                        setSelectedClient(client);
+                        setError('');
+                    } else {
+                        setSelectedClient(null);
+                        setError('顧客IDが見つかりません');
+                    }
+                } else {
+                    setSelectedClient(null);
+                    setError('');
+                }
+            }, [customerId]);
+
+            const handleQuantityChange = (productId, value) => {
+                setProductQuantities(prev => ({
+                    ...prev,
+                    [productId]: value
+                }));
+            };
+
+            const calculateTotal = () => {
+                let total = 0;
+                Object.entries(productQuantities).forEach(([productId, quantityStr]) => {
+                    const quantity = parseInt(quantityStr) || 0;
+                    if (quantity > 0) {
+                        const product = products.find(p => p.id === productId);
+                        if (product) {
+                            total += product.salePrice * quantity;
+                        }
+                    }
+                });
+                return total;
+            };
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                
+                if (!selectedClient) {
+                    setError('顧客IDを正しく入力してください');
+                    return;
+                }
+
+                const orderItems = [];
+                Object.entries(productQuantities).forEach(([productId, quantityStr]) => {
+                    const quantity = parseInt(quantityStr) || 0;
+                    if (quantity > 0) {
+                        const product = products.find(p => p.id === productId);
+                        if (product) {
+                            orderItems.push({
+                                productId: product.id,
+                                productName: product.name,
+                                quantity,
+                                unit: product.unit,
+                                unitPrice: product.salePrice,
+                                totalPrice: product.salePrice * quantity
+                            });
+                        }
+                    }
+                });
+
+                if (orderItems.length === 0) {
+                    setError('商品を選択してください');
+                    return;
+                }
+
+                const orderData = {
+                    customerId: selectedClient.customerId,
+                    clientId: selectedClient.id,
+                    customerInfo: {
+                        companyName: selectedClient.companyName,
+                        contactPerson: selectedClient.contactPerson,
+                        phone: selectedClient.phone,
+                        address: selectedClient.address
+                    },
+                    orderItems,
+                    deliveryDate: new Date().toISOString().split('T')[0],
+                    notes: '',
+                    totalAmount: calculateTotal(),
+                    orderDate: new Date().toISOString().split('T')[0]
+                };
+                
+                onSubmitOrder(orderData);
+            };
+
+            const sendToLine = () => {
+                if (window.liff && window.liff.isApiAvailable('sendMessages')) {
+                    const message = `注文が完了しました！\n\n顧客: ${selectedClient?.companyName}\n合計: ¥${calculateTotal().toLocaleString()}\n\n詳細は管理画面でご確認ください。`;
+                    
+                    window.liff.sendMessages([{
+                        type: 'text',
+                        text: message
+                    }]).then(() => {
+                        console.log('Message sent to LINE');
+                    }).catch((err) => {
+                        console.error('Error sending message:', err);
+                    });
+                }
+            };
+
+            return (
+                <div className="max-w-4xl mx-auto p-4">
+                    <Card className="p-4">
+                        {/* LIFF Status */}
+                        <LiffStatus isLiffReady={isLiffReady} />
+
+                        {/* Header */}
+                        <div className="text-center mb-6">
+                            <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center mx-auto mb-3">
+                                <span className="text-white font-bold text-xl">水</span>
+                            </div>
+                            <h1 className="text-2xl font-bold text-green-800">水戸青果 注文システム</h1>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            {/* Customer ID Section */}
+                            <div>
+                                <h2 className="text-lg font-semibold text-gray-800 mb-3">顧客情報</h2>
+                                <div className="mb-3">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        顧客ID <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={customerId}
+                                        onChange={(e) => setCustomerId(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                                        placeholder="例: 0001"
+                                        required
+                                    />
+                                    {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+                                </div>
+                                
+                                {selectedClient && (
+                                    <div className="bg-gray-50 p-3 rounded-lg">
+                                        <h3 className="font-medium text-gray-800 mb-2">顧客情報</h3>
+                                        <div className="grid grid-cols-1 gap-1 text-sm">
+                                            <div><span className="font-medium">会社名:</span> {selectedClient.companyName}</div>
+                                            {selectedClient.contactPerson && (
+                                                <div><span className="font-medium">担当者:</span> {selectedClient.contactPerson}</div>
+                                            )}
+                                            {selectedClient.phone && (
+                                                <div><span className="font-medium">電話:</span> {selectedClient.phone}</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Product Order Section */}
+                            <div>
+                                <h2 className="text-lg font-semibold text-gray-800 mb-3">商品注文</h2>
+                                <div className="space-y-3">
+                                    {products.map(product => {
+                                        const quantity = parseInt(productQuantities[product.id] || '0') || 0;
+                                        const subtotal = quantity * product.salePrice;
+                                        return (
+                                            <div key={product.id} className="border border-gray-200 rounded-lg p-3">
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <h3 className="font-medium text-gray-800">{product.name}</h3>
+                                                    <span className="text-sm text-gray-600">
+                                                        ¥{product.salePrice.toLocaleString()}/{product.unit}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center">
+                                                        <input
+                                                            type="text"
+                                                            value={productQuantities[product.id] || ''}
+                                                            onChange={(e) => handleQuantityChange(product.id, e.target.value)}
+                                                            className="w-16 px-2 py-1 border border-gray-300 rounded text-center"
+                                                            placeholder="0"
+                                                        />
+                                                        <span className="ml-1 text-sm">{product.unit}</span>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        {quantity > 0 ? (
+                                                            <span className="font-medium">¥{subtotal.toLocaleString()}</span>
+                                                        ) : (
+                                                            <span className="text-gray-400">-</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                
+                                {/* Total */}
+                                <div className="mt-4 p-3 bg-green-50 rounded-lg">
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-semibold text-gray-800">合計金額</span>
+                                        <span className="text-xl font-bold text-green-800">
+                                            ¥{calculateTotal().toLocaleString()}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Submit Buttons */}
+                            <div className="flex flex-col gap-3">
+                                <Button 
+                                    type="submit" 
+                                    variant="primary" 
+                                    disabled={!selectedClient}
+                                    className="w-full py-3 text-lg"
+                                >
+                                    注文を送信
+                                </Button>
+                                
+                                {isLiffReady && (
+                                    <Button 
+                                        type="button" 
+                                        variant="secondary" 
+                                        onClick={sendToLine}
+                                        disabled={!selectedClient || calculateTotal() === 0}
+                                        className="w-full py-2"
+                                    >
+                                        LINEに送信
+                                    </Button>
+                                )}
+                                
+                                <Button 
+                                    type="button" 
+                                    variant="secondary" 
+                                    onClick={() => {
+                                        setCustomerId('');
+                                        setSelectedClient(null);
+                                        setProductQuantities({});
+                                        setError('');
+                                    }}
+                                    className="w-full py-2"
+                                >
+                                    クリア
+                                </Button>
+                            </div>
+                        </form>
+                    </Card>
+                </div>
+            );
+        };
+
+        // Order Confirmation Component (simplified for LIFF)
+        const LiffOrderConfirmation = ({ orderData, onNewOrder }) => {
+            const orderNumber = `ON-${orderData.orderDate.replace(/-/g, '')}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+
+            return (
+                <div className="max-w-4xl mx-auto p-4">
+                    <Card className="p-6">
+                        <div className="text-center mb-6">
+                            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span className="text-3xl">✓</span>
+                            </div>
+                            <h1 className="text-2xl font-bold text-green-800 mb-2">注文完了</h1>
+                            <p className="text-gray-600">
+                                ご注文ありがとうございます
+                            </p>
+                        </div>
+
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                            <div className="text-center">
+                                <p className="text-sm text-green-600 font-medium">注文番号</p>
+                                <p className="text-xl font-bold text-green-800">{orderNumber}</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4 mb-6">
+                            <div>
+                                <span className="text-sm font-medium text-gray-600">お客様:</span>
+                                <p className="font-medium">{orderData.customerInfo.companyName}</p>
+                            </div>
+                            <div>
+                                <span className="text-sm font-medium text-gray-600">合計金額:</span>
+                                <p className="text-xl font-bold">¥{orderData.totalAmount.toLocaleString()}</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                            <p className="text-sm text-yellow-700">
+                                注文内容は管理システムに送信されました。<br />
+                                確認後、担当者よりご連絡いたします。
+                            </p>
+                        </div>
+
+                        <Button
+                            onClick={onNewOrder}
+                            variant="primary"
+                            className="w-full py-3"
+                        >
+                            新しい注文を作成
+                        </Button>
+                    </Card>
+                </div>
+            );
+        };
+
+        // Main LIFF App
+        const LiffApp = () => {
+            const [isLiffReady, setIsLiffReady] = useState(false);
+            const [currentStep, setCurrentStep] = useState('order');
+            const [orderData, setOrderData] = useState(null);
+
+            useEffect(() => {
+                // LIFF initialization (no authentication required)
+                if (window.liff) {
+                    window.liff.ready.then(() => {
+                        setIsLiffReady(true);
+                        console.log('LIFF initialized successfully');
+                    }).catch((err) => {
+                        console.error('LIFF initialization failed:', err);
+                        setIsLiffReady(false);
+                    });
+                } else {
+                    // Fallback for non-LIFF environment
+                    setIsLiffReady(false);
+                }
+            }, []);
+
+            const handleOrderSubmit = (data) => {
+                setOrderData(data);
+                setCurrentStep('confirmation');
+                
+                // Send order data to backend (if available)
+                console.log('Order submitted:', data);
+            };
+
+            const handleNewOrder = () => {
+                setOrderData(null);
+                setCurrentStep('order');
+            };
+
+            return (
+                <div className="liff-container">
+                    {currentStep === 'order' ? (
+                        <LiffOrderForm 
+                            onSubmitOrder={handleOrderSubmit} 
+                            isLiffReady={isLiffReady}
+                        />
+                    ) : (
+                        <LiffOrderConfirmation 
+                            orderData={orderData} 
+                            onNewOrder={handleNewOrder} 
+                        />
+                    )}
+                </div>
+            );
+        };
+
+        ReactDOM.render(<LiffApp />, document.getElementById('liff-app'));
+    </script>
+</body>
+</html>
