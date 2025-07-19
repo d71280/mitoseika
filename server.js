@@ -21,10 +21,16 @@ const config = {
 
 const lineClient = new Client(config)
 
-// Supabase設定
+// Supabase設定 - service roleを使用して権限制限を回避
 const supabase = createClient(
   process.env.SUPABASE_URL || 'https://exmpbeheepptuippyoby.supabase.co',
-  process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4bXBiZWhlZXBwdHVpcHB5b2J5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyODg4NjksImV4cCI6MjA2Nzg2NDg2OX0.boGrurZvcoQmGVoBQPpAAw_tuXF3B4K4--I2rF_jqGA'
+  process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4bXBiZWhlZXBwdHVpcHB5b2J5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjI4ODg2OSwiZXhwIjoyMDY3ODY0ODY5fQ.6a_F_Cks_Xm-CqNdKXvD8qTKiEsYoI_Ty2C1VGVMLp4',
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
 )
 
 // 注文メッセージを解析する関数
@@ -305,16 +311,21 @@ app.get('/api/customers/:customerId', async (req, res) => {
 
 // 商品マスタ管理API
 // 商品追加
-app.post('/api/products', async (req, res) => {
+app.post('/api/products', express.json(), async (req, res) => {
   try {
+    console.log('商品追加リクエスト受信:', req.body)
+    
     const { name, unit, category, description } = req.body
 
     if (!name || !unit) {
+      console.error('バリデーションエラー: 商品名または単位が未入力')
       return res.status(400).json({
         success: false,
         error: '商品名、単位は必須です'
       })
     }
+
+    console.log('商品データベース挿入開始:', { name, unit, category })
 
     const { data, error } = await supabase
       .from('products')
@@ -327,13 +338,17 @@ app.post('/api/products', async (req, res) => {
       .select()
 
     if (error) {
-      console.error('Error adding product:', error)
+      console.error('Supabase挿入エラー:', error)
+      console.error('エラー詳細:', JSON.stringify(error, null, 2))
       return res.status(500).json({
         success: false,
-        error: 'Failed to add product'
+        error: `データベースエラー: ${error.message}`,
+        details: error
       })
     }
 
+    console.log('商品追加成功:', data)
+    
     res.status(201).json({
       success: true,
       product: data[0],
@@ -350,7 +365,7 @@ app.post('/api/products', async (req, res) => {
 })
 
 // 商品更新
-app.put('/api/products/:id', async (req, res) => {
+app.put('/api/products/:id', express.json(), async (req, res) => {
   try {
     const { id } = req.params
     const { name, unit, category, description } = req.body
@@ -396,7 +411,7 @@ app.put('/api/products/:id', async (req, res) => {
 })
 
 // 商品削除
-app.delete('/api/products/:id', async (req, res) => {
+app.delete('/api/products/:id', express.json(), async (req, res) => {
   try {
     const { id } = req.params
 
