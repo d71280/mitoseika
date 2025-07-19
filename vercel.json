@@ -1,20 +1,8 @@
 {
+  "name": "mitoseika",
   "public": true,
   "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Frame-Options",
-          "value": "ALLOWALL"
-        },
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        }
-      ]
-    }
-  ]
+  "framework": null,
+  "outputDirectory": "dist"
 }
