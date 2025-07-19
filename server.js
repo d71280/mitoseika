@@ -154,9 +154,191 @@ app.post('/webhook', middleware(config), async (req, res) => {
   }
 })
 
+// LIFF注文APIエンドポイント
+app.post('/api/orders', express.json(), async (req, res) => {
+  try {
+    console.log('LIFF Order received:', JSON.stringify(req.body, null, 2))
+
+    const { customerId, customerInfo, items, liffUserId, orderTotal } = req.body
+
+    if (!customerId || !customerInfo || !items || !liffUserId) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Missing required fields: customerId, customerInfo, items, liffUserId' 
+      })
+    }
+
+    // 注文番号生成
+    const orderNumber = `LIFF-${Date.now()}`
+    const orderDate = new Date().toISOString().split('T')[0]
+
+    try {
+      // 1. メイン注文をordersテーブルに保存
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          order_number: orderNumber,
+          client_id: customerInfo.id || null,
+          client_name: customerInfo.companyName,
+          order_date: orderDate,
+          delivery_date: orderDate, // 当日配送として設定
+          status: 'pending',
+          sub_total: orderTotal.subTotal,
+          tax_rate: 0.10,
+          tax_amount: orderTotal.taxAmount,
+          total_amount: orderTotal.total,
+          notes: `LIFF注文 - LINE User: ${liffUserId}`,
+          line_message_id: liffUserId
+        })
+        .select()
+        .single()
+
+      if (orderError) {
+        console.error('Error saving LIFF order:', orderError)
+        return res.status(500).json({ 
+          success: false, 
+          error: 'Failed to save order: ' + orderError.message 
+        })
+      }
+
+      // 2. 注文明細をorder_itemsテーブルに保存
+      const orderItems = items.map((item, index) => ({
+        order_id: orderData.id,
+        item_number: index + 1,
+        product_id: item.productId,
+        quantity: item.quantity,
+        unit_price: item.unitPrice,
+        total_price: item.totalPrice
+      }))
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems)
+
+      if (itemsError) {
+        console.error('Error saving order items:', itemsError)
+        // 注文データも削除してロールバック
+        await supabase.from('orders').delete().eq('id', orderData.id)
+        return res.status(500).json({ 
+          success: false, 
+          error: 'Failed to save order items: ' + itemsError.message 
+        })
+      }
+
+      // 3. LIFF注文記録をline_messagesテーブルに保存
+      await supabase
+        .from('line_messages')
+        .insert({
+          line_user_id: liffUserId,
+          client_id: customerInfo.id || null,
+          message_text: `LIFF注文: ${orderNumber}`,
+          parsed_data: {
+            orderNumber,
+            customerId,
+            items,
+            total: orderTotal.total
+          },
+          order_id: orderData.id,
+          processing_status: 'processed',
+          received_at: new Date().toISOString(),
+          processed_at: new Date().toISOString()
+        })
+
+      console.log('LIFF order saved successfully:', orderNumber)
+
+      res.status(200).json({
+        success: true,
+        orderNumber,
+        orderId: orderData.id,
+        message: '注文を正常に受け付けました'
+      })
+
+    } catch (dbError) {
+      console.error('Database error in LIFF order:', dbError)
+      res.status(500).json({ 
+        success: false, 
+        error: 'Database error: ' + dbError.message 
+      })
+    }
+
+  } catch (error) {
+    console.error('LIFF Order API error:', error)
+    res.status(500).json({ 
+      success: false, 
+      error: 'Internal server error: ' + error.message 
+    })
+  }
+})
+
+// 顧客情報取得APIエンドポイント
+app.get('/api/customers/:customerId', async (req, res) => {
+  try {
+    const { customerId } = req.params
+
+    const { data: clientData, error } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('customer_id', customerId)
+      .single()
+
+    if (error) {
+      console.error('Error fetching customer:', error)
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Customer not found' 
+      })
+    }
+
+    res.status(200).json({
+      success: true,
+      customer: clientData
+    })
+
+  } catch (error) {
+    console.error('Customer API error:', error)
+    res.status(500).json({ 
+      success: false, 
+      error: 'Internal server error: ' + error.message 
+    })
+  }
+})
+
+// 商品情報取得APIエンドポイント
+app.get('/api/products', async (req, res) => {
+  try {
+    const { data: productsData, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('name')
+
+    if (error) {
+      console.error('Error fetching products:', error)
+      return res.status(500).json({ 
+        success: false, 
+        error: 'Failed to fetch products' 
+      })
+    }
+
+    res.status(200).json({
+      success: true,
+      products: productsData
+    })
+
+  } catch (error) {
+    console.error('Products API error:', error)
+    res.status(500).json({ 
+      success: false, 
+      error: 'Internal server error: ' + error.message 
+    })
+  }
+})
+
 // サーバー起動
 app.listen(port, () => {
   console.log(`🚀 LINE Bot Webhook Server is running on port ${port}`)
   console.log(`📡 Webhook URL: http://localhost:${port}/webhook`)
   console.log(`📊 Health check: http://localhost:${port}/`)
+  console.log(`📦 LIFF Order API: http://localhost:${port}/api/orders`)
+  console.log(`👥 Customer API: http://localhost:${port}/api/customers/:customerId`)
+  console.log(`🛍️ Products API: http://localhost:${port}/api/products`)
 }) 
