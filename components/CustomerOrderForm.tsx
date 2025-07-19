@@ -22,8 +22,6 @@ const CustomerOrderForm: React.FC<CustomerOrderFormProps> = ({ onSubmitOrder }) 
   const [customerId, setCustomerId] = useState('');
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [productQuantities, setProductQuantities] = useState<Record<string, string>>({});
-  const [deliveryDate, setDeliveryDate] = useState('');
-  const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
 
   // 商品をあいうえお順にソート
@@ -111,8 +109,8 @@ const CustomerOrderForm: React.FC<CustomerOrderFormProps> = ({ onSubmitOrder }) 
         address: selectedClient.address
       },
       orderItems,
-      deliveryDate,
-      notes,
+      deliveryDate: new Date().toISOString().split('T')[0], // 自動的に今日の日付を設定
+      notes: '',
       totalAmount: calculateTotal(),
       orderDate: new Date().toISOString().split('T')[0]
     };
@@ -225,36 +223,6 @@ const CustomerOrderForm: React.FC<CustomerOrderFormProps> = ({ onSubmitOrder }) 
             </div>
           </div>
 
-          {/* 配送情報 */}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">配送情報</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  希望納品日 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  value={deliveryDate}
-                  onChange={(e) => setDeliveryDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  備考・特記事項
-                </label>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
-                  placeholder="配送時間帯、特別な要望など"
-                />
-              </div>
-            </div>
-          </div>
 
           {/* 送信ボタン */}
           <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
@@ -265,8 +233,6 @@ const CustomerOrderForm: React.FC<CustomerOrderFormProps> = ({ onSubmitOrder }) 
                 setCustomerId('');
                 setSelectedClient(null);
                 setProductQuantities({});
-                setDeliveryDate('');
-                setNotes('');
                 setError('');
               }}
             >
