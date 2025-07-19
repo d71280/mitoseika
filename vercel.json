@@ -1,5 +1,7 @@
 {
   "public": true,
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
   "cleanUrls": true,
   "trailingSlash": false,
   "headers": [
