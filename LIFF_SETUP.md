@@ -1,144 +1,140 @@
-# LIFF（LINE Front-end Framework）設定手順
+# LIFF（LINE Front-end Framework）環境設定手順
 
-## 概要
-認証なしのLIFFアプリを作成し、LINE内でWebアプリを表示できるようにします。
+## 必要な環境設定
 
-## 設定手順
-
-### 1. LINE Developersコンソールでの設定
+### 1. LINE Developers Console設定
 
 1. **LINE Developers Console**にアクセス
    - https://developers.line.biz/console/
 
-2. **チャンネルを作成**
+2. **Messaging APIチャンネル作成**
    - 「新規チャンネル作成」→「Messaging API」を選択
    - チャンネル名: 「水戸青果注文システム」
    - チャンネル説明: 「青果注文用LIFF」
    - 業種: 「小売業」
 
-3. **LIFFアプリを追加**
+3. **LIFFアプリ追加**
    - チャンネル設定の「LIFF」タブを選択
    - 「追加」ボタンをクリック
-   - 設定値:
+   - **重要な設定値:**
      ```
      LIFFアプリ名: 水戸青果注文システム
      サイズ: Full
-     エンドポイントURL: https://d71280.github.io/mitoseika/liff.html
-     Scope: profile openid (認証有り)
+     エンドポイントURL: https://YOUR_USERNAME.github.io/YOUR_REPOSITORY/liff.html
+     Scope: profile openid
      ボットリンク機能: On
      ```
 
-4. **LIFF IDを確認**
-   - 作成されたLIFF ID: `2007611355-MbZ09XRP`
-   - LIFF URL: `https://liff.line.me/2007611355-MbZ09XRP`
+4. **LIFF IDをコピー**
+   - 作成されたLIFF IDをコピー（例: 2007611355-MbZ09XRP）
 
-### 2. LIFF認証設定完了
+### 2. GitHub Pages設定
 
-`liff.html`はLIFF ID `2007611355-MbZ09XRP` で設定済み:
+1. **GitHubリポジトリ設定**
+   - Settings → Pages
+   - Source: Deploy from a branch
+   - Branch: main / (root)
 
-```javascript
-// LIFF初期化（認証あり）
-liff.init({ liffId: '2007611355-MbZ09XRP' })
+2. **エンドポイントURL確認**
+   - `https://YOUR_USERNAME.github.io/YOUR_REPOSITORY/liff.html`
+   - 実際のURL例: `https://d71280.github.io/mitoseika/liff.html`
+
+### 3. LIFF認証に必要な設定
+
+#### A. LIFFアプリのScope設定
+```
+profile: ユーザーのプロフィール情報取得
+openid: OpenID Connect認証
 ```
 
-**認証機能:**
-- ユーザープロフィール自動取得
-- LINEログイン必須
+#### B. 認証フロー
+1. ユーザーがLIFF URLにアクセス
+2. LINE認証が自動実行（未ログインの場合）
+3. 認証後、ユーザープロフィール取得
+4. アプリ表示
 
-### 3. LINE Botの設定
+#### C. 必要な権限
+- **プロフィール取得権限**: `liff.getProfile()`
+- **メッセージ送信権限**: `liff.sendMessages()`
 
-1. **Messaging API設定**
-   - Webhook URL: （必要に応じて）
-   - 自動応答メッセージ: 無効
-   - あいさつメッセージ: 有効
+### 4. 設定確認手順
 
-2. **リッチメニュー作成**
-   ```json
-   {
-     "size": {
-       "width": 2500,
-       "height": 1686
-     },
-     "selected": false,
-     "name": "注文メニュー",
-     "chatBarText": "注文する",
-     "areas": [
-       {
-         "bounds": {
-           "x": 0,
-           "y": 0,
-           "width": 2500,
-           "height": 1686
-         },
-         "action": {
-           "type": "uri",
-           "uri": "https://liff.line.me/YOUR_LIFF_ID"
-         }
-       }
-     ]
-   }
+1. **LIFF ID更新**
+   - `liff.html`の`LIFF_ID`を実際のIDに更新
+   ```javascript
+   const LIFF_ID = 'YOUR_ACTUAL_LIFF_ID';
    ```
 
-### 4. テスト方法
+2. **エンドポイントURL更新**
+   - LINE Developers ConsoleでエンドポイントURLを正しいGitHub Pages URLに設定
+
+3. **HTTPS確認**
+   - LIFFはHTTPS必須
+   - GitHub Pagesは自動でHTTPS提供
+
+### 5. テスト手順
 
 1. **友だち追加**
-   - QRコードまたはチャンネルIDで友だち追加
+   - LINE Developers ConsoleでQRコード取得
+   - テスト用LINEアカウントで友だち追加
 
-2. **LIFF起動**
-   - トーク画面でLIFFボタンをタップ
-   - または直接URL: `https://liff.line.me/YOUR_LIFF_ID`
+2. **LIFF起動テスト**
+   - 直接LIFF URL: `https://liff.line.me/YOUR_LIFF_ID`
+   - または、LINEトーク画面からアクセス
 
-3. **動作確認**
-   - 顧客ID入力
-   - 商品選択
-   - 注文送信
+3. **認証確認**
+   - LINE認証画面表示
+   - 認証後、ユーザー名表示確認
 
-## 設定ファイル
+### 6. トラブルシューティング
 
-### 必要なファイル
-- `liff.html` - LIFFアプリ本体
-- 本ファイル（設定手順書）
-
-### デプロイ先
-- GitHub Pages: https://d71280.github.io/mitoseika/liff.html
-- または任意のWebサーバー
-
-## 注意事項
-
-1. **LIFF認証設定**
-   - ユーザー情報の自動取得が可能
-   - LINEログインが必須です
-   - 顧客IDは手動入力
-
-2. **HTTPS必須**
-   - LIFFはHTTPS環境でのみ動作します
-
-3. **モバイル最適化**
-   - スマートフォン表示に最適化されています
-
-4. **LINE内ブラウザ**
-   - LINE内のWebViewで表示されます
-
-## トラブルシューティング
-
-### よくある問題
+#### よくある問題と解決方法
 
 1. **LIFF IDが無効**
-   - LINE Developersコンソールで正しいIDを確認
+   ```
+   エラー: LIFF ID not found
+   解決: LINE Developers Consoleで正しいIDを確認
+   ```
 
-2. **ページが表示されない**
-   - HTTPS確認
-   - URL正確性確認
+2. **エンドポイントURLエラー**
+   ```
+   エラー: Invalid endpoint URL
+   解決: HTTPS URL、GitHub Pagesの正確なパス確認
+   ```
 
-3. **送信機能が動作しない**
-   - バックエンドAPI接続確認
-   - CORS設定確認
+3. **認証が動作しない**
+   ```
+   エラー: Authentication failed
+   解決: Scope設定（profile openid）を確認
+   ```
 
-## 次のステップ
+4. **Vercelログイン画面表示**
+   ```
+   問題: Vercelのログインが要求される
+   解決: GitHub Pagesを使用（HTTPS公開済み）
+   ```
 
-1. ✅ LIFF IDの設定完了
-2. リッチメニューの作成
-3. 友だち追加とテスト
-4. 本番運用開始
+### 7. 現在の設定状況
 
-**テストURL:** https://liff.line.me/2007611355-MbZ09XRP
+- **LIFF ID**: `2007611355-MbZ09XRP`
+- **エンドポイントURL**: `https://d71280.github.io/mitoseika/liff.html`
+- **認証**: LINE認証必須
+- **機能**: プロフィール取得、メッセージ送信
+
+### 8. 本番運用チェックリスト
+
+- [ ] LIFF IDが正しく設定されている
+- [ ] エンドポイントURLがGitHub Pagesに設定されている
+- [ ] HTTPS接続が確認できる
+- [ ] LINE認証が正常に動作する
+- [ ] ユーザープロフィールが取得できる
+- [ ] 注文送信機能が動作する
+- [ ] リッチメニューまたは友だち追加が完了している
+
+## 重要な注意事項
+
+1. **HTTPS必須**: LIFFはHTTPS環境でのみ動作
+2. **認証必須**: プロフィール取得にはLINE認証が必要
+3. **モバイル最適化**: スマートフォン表示専用
+4. **LINE内ブラウザ**: LINE WebViewでの表示
+5. **LIFF SDK**: 必須ライブラリの読み込み確認
