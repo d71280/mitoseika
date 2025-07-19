@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Card from './ui/Card';
 import Button from './ui/Button';
-import { Product, ProductUnit, Client, mockClients } from '../types';
+import { Product, ProductUnit, Client } from '../types';
 import { ShoppingCartIcon } from './icons/ShoppingCartIcon';
-import { mockProductsInventory } from '../types';
 
 interface OrderItem {
   productId: string;
@@ -23,28 +22,75 @@ const CustomerOrderForm: React.FC<CustomerOrderFormProps> = ({ onSubmitOrder }) 
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [productQuantities, setProductQuantities] = useState<Record<string, string>>({});
   const [error, setError] = useState('');
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // 商品をあいうえお順にソート
-  const sortedProducts = [...mockProductsInventory].sort((a, b) => 
-    a.name.localeCompare(b.name, 'ja')
-  );
+  const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? `http://${window.location.hostname}:3001`
+    : window.location.origin;
+
+  // 商品データを取得
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/products`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setProducts(data.products || []);
+      } else {
+        console.error('商品取得エラー:', data.error);
+      }
+    } catch (error) {
+      console.error('商品取得エラー:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 顧客データを取得
+  const fetchClient = async (customerIdValue: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/clients`);
+      const data = await response.json();
+      
+      if (data.success) {
+        const client = data.clients.find((c: Client) => c.customerId === customerIdValue);
+        if (client) {
+          setSelectedClient(client);
+          setError('');
+        } else {
+          setSelectedClient(null);
+          setError('顧客IDが見つかりません');
+        }
+      } else {
+        console.error('顧客取得エラー:', data.error);
+        setError('顧客データの取得に失敗しました');
+      }
+    } catch (error) {
+      console.error('顧客取得エラー:', error);
+      setError('顧客データの取得に失敗しました');
+    }
+  };
+
+  // 初期データ取得
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   // 顧客IDが入力されたら顧客情報を自動取得
   useEffect(() => {
     if (customerId) {
-      const client = mockClients.find(c => c.customerId === customerId);
-      if (client) {
-        setSelectedClient(client);
-        setError('');
-      } else {
-        setSelectedClient(null);
-        setError('顧客IDが見つかりません');
-      }
+      fetchClient(customerId);
     } else {
       setSelectedClient(null);
       setError('');
     }
   }, [customerId]);
+
+  // 商品をあいうえお順にソート
+  const sortedProducts = [...products].sort((a, b) => 
+    a.name.localeCompare(b.name, 'ja')
+  );
 
   const handleQuantityChange = (productId: string, value: string) => {
     setProductQuantities(prev => ({
@@ -60,7 +106,9 @@ const CustomerOrderForm: React.FC<CustomerOrderFormProps> = ({ onSubmitOrder }) 
       if (quantity > 0) {
         const product = sortedProducts.find(p => p.id === productId);
         if (product) {
-          total += product.salePrice * quantity;
+          // デフォルト価格として購入価格を使用（実際のシステムでは顧客別価格を取得）
+          const price = product.salePrice || product.purchasePrice || 0;
+          total += price * quantity;
         }
       }
     });
@@ -81,13 +129,14 @@ const CustomerOrderForm: React.FC<CustomerOrderFormProps> = ({ onSubmitOrder }) 
       if (quantity > 0) {
         const product = sortedProducts.find(p => p.id === productId);
         if (product) {
+          const price = product.salePrice || product.purchasePrice || 0;
           orderItems.push({
             productId: product.id,
             productName: product.name,
             quantity,
             unit: product.unit,
-            unitPrice: product.salePrice,
-            totalPrice: product.salePrice * quantity
+            unitPrice: price,
+            totalPrice: price * quantity
           });
         }
       }
@@ -181,16 +230,24 @@ const CustomerOrderForm: React.FC<CustomerOrderFormProps> = ({ onSubmitOrder }) 
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedProducts.map(product => {
+                  {loading ? (
+                    <tr>
+                      <td colSpan={4} className="border border-gray-300 px-4 py-4 text-center">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mx-auto"></div>
+                        <p className="mt-2 text-sm text-gray-600">商品を読み込み中...</p>
+                      </td>
+                    </tr>
+                  ) : sortedProducts.map(product => {
                     const quantity = parseInt(productQuantities[product.id] || '0') || 0;
-                    const subtotal = quantity * product.salePrice;
+                    const price = product.salePrice || product.purchasePrice || 0;
+                    const subtotal = quantity * price;
                     return (
                       <tr key={product.id} className="hover:bg-gray-50">
                         <td className="border border-gray-300 px-4 py-2">
                           {product.name}
                         </td>
                         <td className="border border-gray-300 px-4 py-2 text-center">
-                          ¥{product.salePrice}/{product.unit}
+                          ¥{price.toLocaleString()}/{product.unit}
                         </td>
                         <td className="border border-gray-300 px-4 py-2 text-center">
                           <input

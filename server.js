@@ -315,6 +315,36 @@ app.get('/api/customers/:customerId', async (req, res) => {
   }
 })
 
+// 顧客一覧取得APIエンドポイント
+app.get('/api/clients', async (req, res) => {
+  try {
+    const { data: clients, error } = await supabase
+      .from('clients')
+      .select('*')
+      .order('customer_id', { ascending: true })
+
+    if (error) {
+      console.error('Error fetching clients:', error)
+      return res.status(500).json({ 
+        success: false, 
+        error: 'Database error: ' + error.message 
+      })
+    }
+
+    res.json({
+      success: true,
+      clients: clients || []
+    })
+
+  } catch (error) {
+    console.error('Clients API error:', error)
+    res.status(500).json({ 
+      success: false, 
+      error: 'Internal server error: ' + error.message 
+    })
+  }
+})
+
 // 商品マスタ管理API
 // 商品追加
 app.post('/api/products', express.json(), async (req, res) => {

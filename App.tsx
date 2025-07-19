@@ -56,7 +56,7 @@ const App: React.FC = () => {
 
   // Lifted states
   const [clients, setClients] = useState<Client[]>(mockClients);
-  const [products, setProducts] = useState<Product[]>(mockProductsInventory); // Inventory products
+  const [products, setProducts] = useState<Product[]>([]); // Empty - will be populated from product master
 
   const handleSelectApp = (appType: 'customer' | 'admin') => {
     setAppMode(appType);
