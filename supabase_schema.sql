@@ -47,6 +47,7 @@ CREATE TABLE price_history (
 -- 4. 顧客マスタ
 CREATE TABLE clients (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  customer_id VARCHAR(20) UNIQUE, -- 顧客ID（LIFF用）
   company_name VARCHAR(200) NOT NULL,
   contact_person VARCHAR(100),
   phone VARCHAR(20),
@@ -179,6 +180,9 @@ CREATE INDEX idx_orders_client_date ON orders(client_id, order_date);
 CREATE INDEX idx_orders_status ON orders(status);
 CREATE INDEX idx_orders_order_number ON orders(order_number);
 CREATE INDEX idx_orders_line_message ON orders(line_message_id);
+
+-- 顧客検索用
+CREATE INDEX idx_clients_customer_id ON clients(customer_id);
 
 -- 注文明細検索用
 CREATE INDEX idx_order_items_order ON order_items(order_id);
