@@ -24,21 +24,26 @@
      LIFFアプリ名: 水戸青果注文システム
      サイズ: Full
      エンドポイントURL: https://d71280.github.io/mitoseika/liff.html
-     Scope: なし（認証なしのため）
-     ボットリンク機能: Off
+     Scope: profile openid (認証有り)
+     ボットリンク機能: On
      ```
 
-4. **LIFF IDをコピー**
-   - 作成されたLIFF IDをメモ（例: 1234567890-abcdefgh）
+4. **LIFF IDを確認**
+   - 作成されたLIFF ID: `2007611355-MbZ09XRP`
+   - LIFF URL: `https://liff.line.me/2007611355-MbZ09XRP`
 
-### 2. HTMLファイルの更新
+### 2. LIFF認証設定完了
 
-`liff.html`の以下の行を更新:
+`liff.html`はLIFF ID `2007611355-MbZ09XRP` で設定済み:
 
 ```javascript
-// LIFF IDを設定（実際のIDに置き換え）
-liff.init({ liffId: 'YOUR_LIFF_ID_HERE' })
+// LIFF初期化（認証あり）
+liff.init({ liffId: '2007611355-MbZ09XRP' })
 ```
+
+**認証機能:**
+- ユーザープロフィール自動取得
+- LINEログイン必須
 
 ### 3. LINE Botの設定
 
@@ -100,9 +105,10 @@ liff.init({ liffId: 'YOUR_LIFF_ID_HERE' })
 
 ## 注意事項
 
-1. **認証なし設定**
-   - ユーザー情報の自動取得はできません
-   - 顧客IDの手動入力が必要です
+1. **LIFF認証設定**
+   - ユーザー情報の自動取得が可能
+   - LINEログインが必須です
+   - 顧客IDは手動入力
 
 2. **HTTPS必須**
    - LIFFはHTTPS環境でのみ動作します
@@ -130,7 +136,9 @@ liff.init({ liffId: 'YOUR_LIFF_ID_HERE' })
 
 ## 次のステップ
 
-1. LIFF IDの設定
+1. ✅ LIFF IDの設定完了
 2. リッチメニューの作成
 3. 友だち追加とテスト
 4. 本番運用開始
+
+**テストURL:** https://liff.line.me/2007611355-MbZ09XRP
