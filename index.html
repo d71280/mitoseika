@@ -5,6 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>水戸青果 究極の粗利管理システム</title>
   <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+  <script>
+    // LIFFアプリからのアクセスをリダイレクト
+    (function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isFromLiff = urlParams.get('liff') === '1' || urlParams.get('liff.state') || window.location.href.includes('liff');
+      
+      if (isFromLiff) {
+        // order.htmlにリダイレクト
+        window.location.href = '/order.html';
+      }
+    })();
+  </script>
   <style>
     /* Custom scrollbar for webkit browsers */
     ::-webkit-scrollbar {

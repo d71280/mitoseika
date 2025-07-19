@@ -29,7 +29,7 @@ const AppSelector: React.FC<AppSelectorProps> = ({ onSelectApp }) => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Customer Interface Card */}
           <Card className="p-8 hover:shadow-xl transition-shadow duration-300 cursor-pointer group" 
-                onClick={() => onSelectApp('customer')}>
+                onClick={() => window.location.href = '/order.html'}>
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-blue-200 transition-colors">
                 <ShoppingCartIcon className="w-8 h-8 text-blue-600" />
@@ -53,7 +53,7 @@ const AppSelector: React.FC<AppSelectorProps> = ({ onSelectApp }) => {
               <Button 
                 onClick={(e) => {
                   e.stopPropagation();
-                  onSelectApp('customer');
+                  window.location.href = '/order.html';
                 }}
                 variant="primary" 
                 className="w-full py-3 text-lg"
