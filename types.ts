@@ -316,6 +316,7 @@ export const mockOrders: Order[] = [
 
 export interface Client {
   id: string;
+  customerId?: string; // 顧客ID
   companyName: string;
   contactPerson?: string;
   phone?: string;
@@ -327,6 +328,7 @@ export interface Client {
 export const mockClients: Client[] = [
   { 
     id: 'client_AStore', 
+    customerId: 'C2407180900001',
     companyName: 'A商店', 
     contactPerson: '山田 太郎', 
     phone: '03-1234-5678', 
@@ -336,6 +338,7 @@ export const mockClients: Client[] = [
   },
   { 
     id: 'client_BDiner', 
+    customerId: 'C2407180900002',
     companyName: 'B食堂', 
     contactPerson: '佐藤 花子', 
     phone: '03-9876-5432', 
@@ -345,6 +348,7 @@ export const mockClients: Client[] = [
   },
   { 
     id: 'client_CVegeShop', 
+    customerId: 'C2407180900003',
     companyName: 'C青果店', 
     contactPerson: '田中 一郎', 
     phone: '029-111-2222', 
@@ -354,6 +358,7 @@ export const mockClients: Client[] = [
   },
    { 
     id: 'client_NewHotel', 
+    customerId: 'C2407180900004',
     companyName: '水戸ニューホテル', 
     contactPerson: '鈴木 次郎', 
     phone: '029-333-4444', 

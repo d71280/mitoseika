@@ -16,6 +16,7 @@ interface ClientEditPageProps {
 const ClientEditPage: React.FC<ClientEditPageProps> = ({ clientId, existingClients, onSaveClient, onCancel }) => {
   const isNewClient = clientId === 'new';
   const [clientData, setClientData] = useState<Partial<Client>>({
+    customerId: '',
     companyName: '',
     contactPerson: '',
     phone: '',
@@ -46,6 +47,17 @@ const ClientEditPage: React.FC<ClientEditPageProps> = ({ clientId, existingClien
     }
   };
 
+  const generateCustomerId = () => {
+    const now = new Date();
+    const year = now.getFullYear().toString().slice(-2);
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    const time = now.getHours().toString().padStart(2, '0') + now.getMinutes().toString().padStart(2, '0');
+    const random = Math.floor(Math.random() * 100).toString().padStart(2, '0');
+    const customerId = `C${year}${month}${day}${time}${random}`;
+    setClientData(prev => ({ ...prev, customerId }));
+  };
+
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof Client, string>> = {};
     if (!clientData.companyName?.trim()) {
@@ -69,6 +81,7 @@ const ClientEditPage: React.FC<ClientEditPageProps> = ({ clientId, existingClien
     
     const clientToSave: Client = {
       id: finalClientId,
+      customerId: clientData.customerId || undefined,
       companyName: clientData.companyName || '',
       contactPerson: clientData.contactPerson || undefined,
       phone: clientData.phone || undefined,
@@ -95,6 +108,28 @@ const ClientEditPage: React.FC<ClientEditPageProps> = ({ clientId, existingClien
       </header>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        <FormField label="顧客ID" error={errors.customerId}>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              name="customerId"
+              id="customerId"
+              value={clientData.customerId || ''}
+              onChange={handleChange}
+              className="mt-1 block flex-1 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+              placeholder="例: C2507191030001"
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={generateCustomerId}
+              className="mt-1 px-4 py-2 text-sm"
+            >
+              自動採番
+            </Button>
+          </div>
+        </FormField>
+
         <FormField label="会社名" error={errors.companyName}>
           <input
             type="text"
