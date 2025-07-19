@@ -18,7 +18,7 @@ Vercelログイン画面が表示される主な原因：
 
 3. **LIFFタブで設定確認**
    - LIFF ID: `2007611355-MbZ09XRP`
-   - **エンドポイントURL**: `https://d71280.github.io/mitoseika/liff.html`
+   - **エンドポイントURL**: `https://mitoseika-profit-system-1pcxql78l-daiki-akiyama-9051s-projects.vercel.app/liff-order.html`
 
 ### 2. エンドポイントURL更新（重要）
 
@@ -28,7 +28,7 @@ Vercelログイン画面が表示される主な原因：
 2. **「編集」ボタン**をクリック
 3. **エンドポイントURL**を以下に変更:
    ```
-   https://d71280.github.io/mitoseika/liff.html
+   https://mitoseika-profit-system-1pcxql78l-daiki-akiyama-9051s-projects.vercel.app/liff-order.html
    ```
 4. **「更新」ボタン**をクリック
 
@@ -48,7 +48,7 @@ Vercelログイン画面が表示される主な原因：
 
 1. **直接GitHub Pagesにアクセス**
    ```
-   https://d71280.github.io/mitoseika/liff.html
+   https://mitoseika-profit-system-1pcxql78l-daiki-akiyama-9051s-projects.vercel.app/liff-order.html
    ```
 
 2. **LIFF URLでアクセス**
@@ -96,9 +96,9 @@ Vercelログイン画面が表示される主な原因：
 
 ### 6. 最終確認チェックリスト
 
-- [ ] LIFFエンドポイントURL: `https://d71280.github.io/mitoseika/liff.html`
+- [ ] LIFFエンドポイントURL: `https://mitoseika-profit-system-1pcxql78l-daiki-akiyama-9051s-projects.vercel.app/liff-order.html`
 - [ ] GitHub Pagesデプロイ成功
-- [ ] liff.htmlが正しく配置されている
+- [ ] liff-order.htmlが正しく配置されている
 - [ ] LIFF ID: `2007611355-MbZ09XRP`
 - [ ] Scope: profile openid
 - [ ] ボットリンク機能: On
@@ -129,7 +129,7 @@ Vercelログイン画面が表示される主な原因：
 ```
 チャンネル: 水戸青果注文システム
 LIFF ID: 2007611355-MbZ09XRP
-エンドポイントURL: https://d71280.github.io/mitoseika/liff.html
+エンドポイントURL: https://mitoseika-profit-system-1pcxql78l-daiki-akiyama-9051s-projects.vercel.app/liff-order.html
 サイズ: Full
 Scope: profile openid
 ボットリンク: On

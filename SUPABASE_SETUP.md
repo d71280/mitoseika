@@ -77,7 +77,7 @@ Password: [設定したパスワード]
 2. **CORS設定**に以下を追加:
    ```
    https://liff.line.me
-   https://d71280.github.io
+   https://mitoseika-profit-system-1pcxql78l-daiki-akiyama-9051s-projects.vercel.app
    ```
 
 ### B. RLSポリシーの調整（LIFF用）

@@ -289,7 +289,10 @@
     <script>
         // 設定
         const LIFF_ID = '2007611355-MbZ09XRP';
-        const API_BASE_URL = 'https://mitoseika-egsnystgs-daiki-akiyama-90515-projects.vercel.app';
+        // 現在のドメインを使用してAPI_BASE_URLを動的に設定
+        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? `http://${window.location.hostname}:3001`
+            : window.location.origin;
         
         // グローバル変数
         let userProfile = null;
