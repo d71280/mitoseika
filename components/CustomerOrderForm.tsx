@@ -61,21 +61,36 @@ const CustomerOrderForm: React.FC<CustomerOrderFormProps> = ({ onSubmitOrder }) 
         console.log('検索対象の顧客ID:', customerIdValue);
         
         // 各顧客のcustomerIdをログ出力
-        data.clients.forEach((c: Client, index: number) => {
+        data.clients.forEach((c: any, index: number) => {
           console.log(`顧客 ${index}:`, {
             id: c.id,
-            customerId: c.customerId,
-            companyName: c.companyName
+            customerId: c.customer_id,
+            companyName: c.company_name
           });
         });
         
-        const client = data.clients.find((c: Client) => c.customerId === customerIdValue);
+        const client = data.clients.find((c: any) => c.customer_id === customerIdValue);
         console.log('見つかった顧客:', client);
         
         if (client) {
-          setSelectedClient(client);
+          const convertedClient = {
+            id: client.id,
+            customerId: client.customer_id,
+            companyName: client.company_name,
+            contactPerson: client.contact_person,
+            phone: client.phone,
+            email: client.email,
+            address: client.address,
+            lineUserId: client.line_user_id,
+            ruleSummary: client.rule_summary,
+            paymentTerms: client.payment_terms,
+            isActive: client.is_active,
+            createdAt: client.created_at,
+            updatedAt: client.updated_at
+          };
+          setSelectedClient(convertedClient);
           setError('');
-          console.log('顧客設定成功:', client.companyName);
+          console.log('顧客設定成功:', convertedClient.companyName);
         } else {
           setSelectedClient(null);
           setError('顧客IDが見つかりません');
