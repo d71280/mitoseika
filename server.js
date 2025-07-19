@@ -480,6 +480,91 @@ app.get('/api/products', async (req, res) => {
   }
 })
 
+// ダッシュボード統計API
+app.get('/api/dashboard/stats', async (req, res) => {
+  try {
+    console.log('Dashboard stats API called')
+    
+    // 今日の日付を取得
+    const today = new Date().toISOString().split('T')[0]
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
+    
+    // 今日の注文データを取得
+    const { data: todayOrders, error: todayError } = await supabase
+      .from('orders')
+      .select('*')
+      .gte('created_at', today)
+      .lt('created_at', today + 'T23:59:59')
+    
+    if (todayError) {
+      console.error('今日の注文取得エラー:', todayError)
+    }
+    
+    // 昨日の注文データを取得
+    const { data: yesterdayOrders, error: yesterdayError } = await supabase
+      .from('orders')
+      .select('*')
+      .gte('created_at', yesterday)
+      .lt('created_at', yesterday + 'T23:59:59')
+    
+    if (yesterdayError) {
+      console.error('昨日の注文取得エラー:', yesterdayError)
+    }
+    
+    // 統計計算
+    const todayOrderCount = todayOrders?.length || 0
+    const yesterdayOrderCount = yesterdayOrders?.length || 0
+    
+    const todaySales = todayOrders?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0
+    const yesterdaySales = yesterdayOrders?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0
+    
+    const todayProfit = todayOrders?.reduce((sum, order) => sum + ((order.total_amount || 0) * 0.2), 0) || 0  // 粗利率20%と仮定
+    const yesterdayProfit = yesterdayOrders?.reduce((sum, order) => sum + ((order.total_amount || 0) * 0.2), 0) || 0
+    
+    // 変化率計算
+    const salesChange = yesterdaySales > 0 ? ((todaySales - yesterdaySales) / yesterdaySales * 100).toFixed(1) : 0
+    const profitChange = yesterdayProfit > 0 ? ((todayProfit - yesterdayProfit) / yesterdayProfit * 100).toFixed(1) : 0
+    const orderChange = todayOrderCount - yesterdayOrderCount
+    
+    console.log('Dashboard stats calculated:', {
+      todayOrderCount,
+      yesterdayOrderCount,
+      todaySales,
+      yesterdaySales,
+      todayProfit,
+      yesterdayProfit
+    })
+    
+    res.status(200).json({
+      success: true,
+      stats: {
+        sales: {
+          value: Math.round(todaySales),
+          change: `${salesChange >= 0 ? '+' : ''}${salesChange}%`,
+          changeType: salesChange >= 0 ? 'positive' : 'negative'
+        },
+        profit: {
+          value: Math.round(todayProfit),
+          change: `${profitChange >= 0 ? '+' : ''}${profitChange}%`,
+          changeType: profitChange >= 0 ? 'positive' : 'negative'
+        },
+        orders: {
+          value: todayOrderCount,
+          change: `${orderChange >= 0 ? '+' : ''}${orderChange}件`,
+          changeType: orderChange >= 0 ? 'positive' : 'negative'
+        }
+      }
+    })
+    
+  } catch (error) {
+    console.error('Dashboard stats API error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error: ' + error.message
+    })
+  }
+})
+
 // サーバー起動
 app.listen(port, () => {
   console.log(`🚀 LINE Bot Webhook Server is running on port ${port}`)
@@ -488,4 +573,5 @@ app.listen(port, () => {
   console.log(`📦 LIFF Order API: http://localhost:${port}/api/orders`)
   console.log(`👥 Customer API: http://localhost:${port}/api/customers/:customerId`)
   console.log(`🛍️ Products API: http://localhost:${port}/api/products`)
+  console.log(`📈 Dashboard Stats API: http://localhost:${port}/api/dashboard/stats`)
 }) 
