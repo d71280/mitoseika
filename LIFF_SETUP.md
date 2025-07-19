@@ -20,10 +20,12 @@
      ```
      LIFFアプリ名: 水戸青果注文システム
      サイズ: Full
-     エンドポイントURL: https://YOUR_USERNAME.github.io/YOUR_REPOSITORY/liff.html
+     エンドポイントURL: https://d71280.github.io/mitoseika/liff.html
      Scope: profile openid
      ボットリンク機能: On
      ```
+
+   - **⚠️ 重要**: 既存のLIFFアプリのエンドポイントURLを更新
 
 4. **LIFF IDをコピー**
    - 作成されたLIFF IDをコピー（例: 2007611355-MbZ09XRP）
