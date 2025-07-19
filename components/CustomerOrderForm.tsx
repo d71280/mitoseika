@@ -198,7 +198,7 @@ const CustomerOrderForm: React.FC<CustomerOrderFormProps> = ({ onSubmitOrder }) 
                             value={productQuantities[product.id] || ''}
                             onChange={(e) => handleQuantityChange(product.id, e.target.value)}
                             className="w-20 px-2 py-1 border border-gray-300 rounded text-center"
-                            placeholder="0"
+                            placeholder=""
                           />
                           <span className="ml-1">{product.unit}</span>
                         </td>
