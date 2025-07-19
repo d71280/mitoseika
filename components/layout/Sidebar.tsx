@@ -11,6 +11,7 @@ import { ArchiveBoxIcon } from '../icons/ArchiveBoxIcon'; // New icon for Invent
 import { UserGroupIcon } from '../icons/UserGroupIcon'; // New icon for Client Management
 import { PresentationChartLineIcon } from '../icons/PresentationChartLineIcon'; // Icon for Order Analysis
 import { CurrencyYenIcon } from '../icons/CurrencyYenIcon'; // Icon for Purchase Price Info
+import { CubeIcon } from '../icons/CubeIcon'; // Icon for Product Master
 
 interface SidebarProps {
   currentPage: PageView;
@@ -24,6 +25,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, navigateTo, onBackToSele
     { page: PageView.INTEGRATED_ANALYSIS, label: '統合分析', icon: <PresentationChartLineIcon className="w-6 h-6" /> },
     { page: PageView.CLIENT_MANAGEMENT, label: '顧客管理', icon: <UserGroupIcon className="w-6 h-6" /> },
     { page: PageView.INVENTORY_MANAGEMENT, label: '在庫管理', icon: <ArchiveBoxIcon className="w-6 h-6" /> },
+    { page: PageView.PRODUCT_MASTER, label: '商品マスタ', icon: <CubeIcon className="w-6 h-6" /> },
     { page: PageView.SUPPLIER_LIST, label: '仕入先管理', icon: <UsersIcon className="w-6 h-6" /> },
     { page: PageView.PURCHASE_PRICE_INFO, label: '仕入価格情報', icon: <CurrencyYenIcon className="w-6 h-6" /> },
     { page: PageView.DELIVERY_SLIP, label: '納品書発行', icon: <PrinterIcon className="w-6 h-6" /> },

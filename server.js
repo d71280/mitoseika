@@ -303,6 +303,121 @@ app.get('/api/customers/:customerId', async (req, res) => {
   }
 })
 
+// 商品マスタ管理API
+// 商品追加
+app.post('/api/products', async (req, res) => {
+  try {
+    const { name, price, unit, category, description } = req.body
+
+    if (!name || !price || !unit) {
+      return res.status(400).json({
+        success: false,
+        error: '商品名、価格、単位は必須です'
+      })
+    }
+
+    const { data, error } = await supabase
+      .from('products')
+      .insert([{ name, price, unit, category, description }])
+      .select()
+
+    if (error) {
+      console.error('Error adding product:', error)
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to add product'
+      })
+    }
+
+    res.status(201).json({
+      success: true,
+      product: data[0],
+      message: '商品を追加しました'
+    })
+
+  } catch (error) {
+    console.error('Add product API error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error: ' + error.message
+    })
+  }
+})
+
+// 商品更新
+app.put('/api/products/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+    const { name, price, unit, category, description } = req.body
+
+    const { data, error } = await supabase
+      .from('products')
+      .update({ name, price, unit, category, description })
+      .eq('id', id)
+      .select()
+
+    if (error) {
+      console.error('Error updating product:', error)
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to update product'
+      })
+    }
+
+    if (data.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: '商品が見つかりません'
+      })
+    }
+
+    res.status(200).json({
+      success: true,
+      product: data[0],
+      message: '商品を更新しました'
+    })
+
+  } catch (error) {
+    console.error('Update product API error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error: ' + error.message
+    })
+  }
+})
+
+// 商品削除
+app.delete('/api/products/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      console.error('Error deleting product:', error)
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to delete product'
+      })
+    }
+
+    res.status(200).json({
+      success: true,
+      message: '商品を削除しました'
+    })
+
+  } catch (error) {
+    console.error('Delete product API error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error: ' + error.message
+    })
+  }
+})
+
 // 商品情報取得APIエンドポイント
 app.get('/api/products', async (req, res) => {
   try {

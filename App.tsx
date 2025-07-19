@@ -18,6 +18,7 @@ import PurchasePriceInfoPage from './components/PurchasePriceInfoPage';
 import IntegratedAnalysisPage from './components/IntegratedAnalysisPage';
 import AppSelector from './components/AppSelector';
 import CustomerApp from './components/CustomerApp';
+import ProductMasterPage from './components/ProductMasterPage';
 import { mockOrders, mitoSeikaCompanyInfo, Client, mockClients, Product, mockProductsInventory } from './types';
 
 export enum PageView {
@@ -34,6 +35,7 @@ export enum PageView {
   CLIENT_EDIT_PAGE = 'client_edit_page',
   INVENTORY_TAKING_PAGE = 'inventory_taking_page', // New
   INVENTORY_ADJUST_PAGE = 'inventory_adjust_page', // New
+  PRODUCT_MASTER = 'product_master', // New
 }
 
 const App: React.FC = () => {
@@ -197,6 +199,9 @@ const App: React.FC = () => {
       } else {
          pageContent = <InventoryManagementPage products={products} navigateTo={navigateTo} />;
       }
+      break;
+    case PageView.PRODUCT_MASTER:
+      pageContent = <ProductMasterPage />;
       break;
     default: // PageView.DASHBOARD
       pageContent = <DashboardPage />;

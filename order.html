@@ -327,8 +327,15 @@
                     throw new Error('商品データの取得に失敗しました');
                 }
                 
-                products = await response.json();
-                console.log('商品データ取得成功:', products);
+                const data = await response.json();
+                console.log('商品データ取得成功:', data);
+                
+                if (data.success) {
+                    products = data.products || [];
+                } else {
+                    throw new Error(data.error || '商品データの取得に失敗しました');
+                }
+                
                 displayProducts();
             } catch (error) {
                 console.error('商品読み込みエラー:', error);
