@@ -47,14 +47,14 @@
         // Product data
         const products = [
             { id: 'prod_cabbage', name: 'キャベツ', unit: '個', salePrice: 150 },
-            { id: 'prod_cucumber', name: 'きゅうり', unit: 'ケース', salePrice: 2000 },
+            { id: 'prod_cucumber', name: 'きゅうり', unit: '個', salePrice: 2000 },
             { id: 'prod_hakusai', name: '白菜', unit: '個', salePrice: 300 },
-            { id: 'prod_carrot', name: '人参', unit: 'kg', salePrice: 250 },
+            { id: 'prod_carrot', name: '人参', unit: '個', salePrice: 250 },
             { id: 'prod_daikon', name: '大根', unit: '個', salePrice: 160 },
             { id: 'prod_lettuce', name: 'レタス', unit: '個', salePrice: 180 },
-            { id: 'prod_potato', name: 'じゃがいも（メークイン）', unit: 'kg', salePrice: 200 },
-            { id: 'prod_tomato', name: 'トマト', unit: '箱', salePrice: 1200 },
-            { id: 'prod_onion', name: '玉ねぎ', unit: 'kg', salePrice: 300 }
+            { id: 'prod_potato', name: 'じゃがいも（メークイン）', unit: '個', salePrice: 200 },
+            { id: 'prod_tomato', name: 'トマト', unit: '個', salePrice: 1200 },
+            { id: 'prod_onion', name: '玉ねぎ', unit: '個', salePrice: 300 }
         ].sort((a, b) => a.name.localeCompare(b.name, 'ja'));
 
         // Client data
@@ -307,7 +307,6 @@
                                                             value={productQuantities[product.id] || ''}
                                                             onChange={(e) => handleQuantityChange(product.id, e.target.value)}
                                                             className="w-16 px-2 py-1 border border-gray-300 rounded text-center"
-                                                            placeholder="0"
                                                         />
                                                         <span className="ml-1 text-sm">{product.unit}</span>
                                                     </div>
