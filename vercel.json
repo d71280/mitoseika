@@ -4,11 +4,5 @@
   "buildCommand": "npm run build",
   "installCommand": "npm install",
   "framework": null,
-  "outputDirectory": "dist",
-  "rewrites": [
-    {
-      "source": "/order",
-      "destination": "/order.html"
-    }
-  ]
+  "outputDirectory": "dist"
 }

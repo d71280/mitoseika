@@ -37,7 +37,16 @@ export enum PageView {
 }
 
 const App: React.FC = () => {
-  const [appMode, setAppMode] = useState<'selector' | 'customer' | 'admin'>('selector');
+  // URLパラメータをチェックして初期モードを決定
+  const getInitialMode = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode');
+    if (mode === 'customer') return 'customer';
+    if (mode === 'admin') return 'admin';
+    return 'selector';
+  };
+  
+  const [appMode, setAppMode] = useState<'selector' | 'customer' | 'admin'>(getInitialMode());
   const [currentPage, setCurrentPage] = useState<PageView>(PageView.DASHBOARD);
   const [selectedAnalysisItemId, setSelectedAnalysisItemId] = useState<string | null>(null);
   const [editingClientId, setEditingClientId] = useState<string | 'new' | null>(null);
