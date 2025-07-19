@@ -7,6 +7,12 @@ import dotenv from 'dotenv'
 // 環境変数の読み込み
 dotenv.config()
 
+// Vercel環境でのログ出力
+console.log('Environment variables check:')
+console.log('SUPABASE_URL:', process.env.SUPABASE_URL ? 'Set' : 'Not set')
+console.log('SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Set' : 'Not set')
+console.log('NODE_ENV:', process.env.NODE_ENV)
+
 const app = express()
 const port = process.env.PORT || 3001
 
@@ -332,8 +338,7 @@ app.post('/api/products', express.json(), async (req, res) => {
       .insert([{ 
         name, 
         unit, 
-        category: category || null,
-        is_active: true
+        category: category || null
       }])
       .select()
 
