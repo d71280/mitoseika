@@ -128,7 +128,7 @@ const App: React.FC = () => {
           />
         );
       } else {
-        pageContent = <IntegratedAnalysisPage orders={mockOrders} />; 
+        pageContent = <IntegratedAnalysisPage />; 
       }
       break;
     case PageView.CLIENT_ANALYSIS_DETAIL:
@@ -140,7 +140,7 @@ const App: React.FC = () => {
           />
         );
       } else {
-        pageContent = <IntegratedAnalysisPage orders={mockOrders} />; 
+        pageContent = <IntegratedAnalysisPage />; 
       }
       break;
     case PageView.DELIVERY_SLIP:

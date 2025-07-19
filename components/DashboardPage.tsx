@@ -2,8 +2,6 @@ import React from 'react';
 import SummarySection from './dashboard/SummarySection';
 import PerformanceChartSection from './dashboard/PerformanceChartSection'; // New chart section
 import RealtimeOrdersSection from './dashboard/RealtimeOrdersSection'; // New realtime orders section
-import TestOrderForm from './dashboard/TestOrderForm'; // テスト用フォーム
-import { LineWebhookSimulator } from './dashboard/LineWebhookSimulator'; // LINE Bot シミュレーター
 import TodaysOrdersSection from './dashboard/TodaysOrdersSection'; // 本日の注文一覧
 import Card from './ui/Card';
 // PageView and Button imports are removed as navigation is handled by Sidebar
@@ -26,10 +24,8 @@ const DashboardPage: React.FC = () => {
       <SummarySection />
       <PerformanceChartSection /> 
       <TodaysOrdersSection />
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <RealtimeOrdersSection />
-        <TestOrderForm />
-        <LineWebhookSimulator />
       </div>
 
       {/* Footer with navigation buttons removed */}

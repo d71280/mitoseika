@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水戸青果 - LINE注文システム</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, #f0fdf4 0%, #eff6ff 100%);
+            min-height: 100vh;
+            color: #1f2937;
+        }
+        
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .section {
+            padding: 20px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .section h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section h2::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #10b981;
+            margin-right: 12px;
+            border-radius: 2px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        
+        .customer-info {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 12px;
+            display: none;
+        }
+        
+        .customer-info.show {
+            display: block;
+        }
+        
+        .customer-detail {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .customer-detail:last-child {
+            margin-bottom: 0;
+        }
+        
+        .customer-detail strong {
+            color: #374151;
+        }
+        
+        .customer-detail span {
+            color: #6b7280;
+        }
+        
+        .product-item {
+            background: #ffffff;
+            border: 2px solid #f3f4f6;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+        }
+        
+        .product-item:hover {
+            border-color: #e5e7eb;
+        }
+        
+        .product-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        
+        .product-name {
+            font-weight: 600;
+            color: #374151;
+            font-size: 16px;
+        }
+        
+        .product-price {
+            font-weight: 500;
+            color: #10b981;
+            font-size: 14px;
+        }
+        
+        .quantity-input {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .quantity-input input {
+            width: 80px;
+            padding: 8px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 16px;
+        }
+        
+        .quantity-input span {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .total-section {
+            background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+            border: 2px solid #d1fae5;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px;
+            text-align: center;
+        }
+        
+        .total-label {
+            font-size: 16px;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+        
+        .total-amount {
+            font-size: 28px;
+            font-weight: 700;
+            color: #059669;
+        }
+        
+        .submit-btn {
+            width: calc(100% - 40px);
+            margin: 0 20px 20px;
+            padding: 16px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+        }
+        
+        .submit-btn:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .error-message {
+            color: #dc2626;
+            font-size: 14px;
+            margin-top: 8px;
+            display: none;
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #10b981;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .success-message {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: #10b981;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+            font-size: 36px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container">
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>LINE認証を確認中...</p>
+        </div>
+    </div>
+
+    <script>
+        // 設定
+        const LIFF_ID = '2007611355-MbZ09XRP';
+        const API_BASE_URL = 'https://mitoseika-egsnystgs-daiki-akiyama-90515-projects.vercel.app';
+        
+        // グローバル変数
+        let userProfile = null;
+        let selectedCustomer = null;
+        let productQuantities = {};
+        let products = [];
+
+        // 初期化
+        async function initialize() {
+            console.log('=== LINE注文システム 初期化開始 ===');
+            
+            try {
+                // LIFF初期化
+                await liff.init({ liffId: LIFF_ID });
+                console.log('LIFF初期化成功');
+                
+                // LINE内でない場合のエラー表示
+                if (!liff.isInClient()) {
+                    showErrorPage('LINE内でのみご利用いただけます', 'LINEアプリを開き、提供されたLIFFリンクからアクセスしてください。');
+                    return;
+                }
+                
+                // ログイン確認
+                if (!liff.isLoggedIn()) {
+                    console.log('未ログイン - 認証開始');
+                    liff.login();
+                    return;
+                }
+                
+                // プロフィール取得
+                userProfile = await liff.getProfile();
+                console.log('プロフィール取得成功:', userProfile);
+                
+                // 商品データ読み込み
+                await loadProducts();
+                
+                // メインアプリ表示
+                showOrderForm();
+                
+            } catch (error) {
+                console.error('初期化エラー:', error);
+                showErrorPage('初期化エラー', 'アプリの初期化に失敗しました。もう一度お試しください。');
+            }
+        }
+
+        // 商品データ読み込み
+        async function loadProducts() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/products`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    products = data.products.map(product => ({
+                        id: product.id,
+                        name: product.name,
+                        price: product.sale_price,
+                        unit: product.unit
+                    }));
+                } else {
+                    throw new Error('商品データの取得に失敗');
+                }
+            } catch (error) {
+                console.error('商品データ取得エラー:', error);
+                // フォールバック データ
+                products = [
+                    { id: 'prod_cabbage', name: 'キャベツ', price: 150, unit: '個' },
+                    { id: 'prod_cucumber', name: 'きゅうり', price: 2000, unit: 'ケース' },
+                    { id: 'prod_hakusai', name: '白菜', price: 300, unit: '個' },
+                    { id: 'prod_carrot', name: '人参', price: 250, unit: 'kg' },
+                    { id: 'prod_daikon', name: '大根', price: 160, unit: '個' },
+                    { id: 'prod_lettuce', name: 'レタス', price: 180, unit: '個' },
+                    { id: 'prod_potato', name: 'じゃがいも（メークイン）', price: 200, unit: 'kg' },
+                    { id: 'prod_tomato', name: 'トマト', price: 1200, unit: '箱' },
+                    { id: 'prod_onion', name: '玉ねぎ', price: 300, unit: 'kg' }
+                ];
+            }
+        }
+
+        // 顧客情報取得
+        async function loadCustomer(customerId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/customers/${customerId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    return {
+                        id: data.customer.id,
+                        customerId: data.customer.customer_id,
+                        name: data.customer.company_name,
+                        contact: data.customer.contact_person,
+                        phone: data.customer.phone
+                    };
+                }
+                return null;
+            } catch (error) {
+                console.error('顧客データ取得エラー:', error);
+                return null;
+            }
+        }
+
+        // エラーページ表示
+        function showErrorPage(title, message) {
+            document.getElementById('app').innerHTML = `
+                <div class="header">
+                    <h1>🚫 ${title}</h1>
+                    <p>${message}</p>
+                </div>
+                <div class="section" style="text-align: center; padding: 40px 20px;">
+                    <p style="color: #6b7280; line-height: 1.6;">
+                        解決方法：<br>
+                        1. LINEアプリを開く<br>
+                        2. 提供されたLIFFリンクから再度アクセス<br>
+                        3. LINE内ブラウザでページを開く
+                    </p>
+                </div>
+            `;
+        }
+
+        // 注文フォーム表示
+        function showOrderForm() {
+            document.getElementById('app').innerHTML = `
+                <div class="header">
+                    <h1>🥬 水戸青果 注文システム</h1>
+                    <p>ようこそ、${userProfile.displayName}さん</p>
+                </div>
+                
+                <div class="section">
+                    <h2>顧客情報</h2>
+                    <div class="form-group">
+                        <label class="form-label">顧客ID *</label>
+                        <input type="text" class="form-input" id="customer-id" placeholder="例: 0001" onchange="handleCustomerChange()">
+                        <div id="customer-error" class="error-message"></div>
+                        <div id="customer-info" class="customer-info"></div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2>商品選択</h2>
+                    <div id="product-list"></div>
+                </div>
+                
+                <div class="total-section">
+                    <div class="total-label">合計金額</div>
+                    <div id="total-amount" class="total-amount">¥0</div>
+                </div>
+                
+                <button id="submit-btn" class="submit-btn" onclick="submitOrder()" disabled>
+                    注文を送信
+                </button>
+            `;
+            
+            renderProducts();
+        }
+
+        // 商品リスト描画
+        function renderProducts() {
+            const productList = document.getElementById('product-list');
+            productList.innerHTML = products.map(product => `
+                <div class="product-item">
+                    <div class="product-header">
+                        <div class="product-name">${product.name}</div>
+                        <div class="product-price">¥${product.price.toLocaleString()}/${product.unit}</div>
+                    </div>
+                    <div class="quantity-input">
+                        <input type="number" min="0" id="qty-${product.id}" onchange="updateQuantity('${product.id}', this.value)" placeholder="0">
+                        <span>${product.unit}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 顧客変更処理
+        async function handleCustomerChange() {
+            const customerId = document.getElementById('customer-id').value;
+            const errorEl = document.getElementById('customer-error');
+            const infoEl = document.getElementById('customer-info');
+            
+            if (customerId) {
+                errorEl.textContent = '顧客情報を確認中...';
+                errorEl.style.display = 'block';
+                errorEl.style.color = '#6b7280';
+                
+                const customer = await loadCustomer(customerId);
+                
+                if (customer) {
+                    selectedCustomer = customer;
+                    infoEl.innerHTML = `
+                        <div class="customer-detail">
+                            <strong>会社名:</strong>
+                            <span>${customer.name}</span>
+                        </div>
+                        <div class="customer-detail">
+                            <strong>担当者:</strong>
+                            <span>${customer.contact}</span>
+                        </div>
+                        <div class="customer-detail">
+                            <strong>電話:</strong>
+                            <span>${customer.phone}</span>
+                        </div>
+                    `;
+                    infoEl.classList.add('show');
+                    errorEl.style.display = 'none';
+                } else {
+                    selectedCustomer = null;
+                    infoEl.classList.remove('show');
+                    errorEl.textContent = '顧客IDが見つかりません';
+                    errorEl.style.color = '#dc2626';
+                    errorEl.style.display = 'block';
+                }
+            } else {
+                selectedCustomer = null;
+                infoEl.classList.remove('show');
+                errorEl.style.display = 'none';
+            }
+            
+            updateSubmitButton();
+        }
+
+        // 数量更新
+        function updateQuantity(productId, value) {
+            const quantity = parseInt(value) || 0;
+            productQuantities[productId] = quantity;
+            updateTotal();
+            updateSubmitButton();
+        }
+
+        // 合計更新
+        function updateTotal() {
+            let total = 0;
+            Object.entries(productQuantities).forEach(([productId, quantity]) => {
+                if (quantity > 0) {
+                    const product = products.find(p => p.id === productId);
+                    if (product) {
+                        total += product.price * quantity;
+                    }
+                }
+            });
+            document.getElementById('total-amount').textContent = `¥${total.toLocaleString()}`;
+        }
+
+        // 送信ボタン更新
+        function updateSubmitButton() {
+            const submitBtn = document.getElementById('submit-btn');
+            const hasItems = Object.values(productQuantities).some(qty => qty > 0);
+            
+            if (selectedCustomer && hasItems) {
+                submitBtn.disabled = false;
+                submitBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.style.background = '#d1d5db';
+            }
+        }
+
+        // 注文送信
+        async function submitOrder() {
+            if (!selectedCustomer) {
+                alert('顧客情報を確認してください');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.textContent = '注文送信中...';
+            submitBtn.disabled = true;
+
+            try {
+                const orderItems = [];
+                let subTotal = 0;
+
+                Object.entries(productQuantities).forEach(([productId, quantity]) => {
+                    if (quantity > 0) {
+                        const product = products.find(p => p.id === productId);
+                        if (product) {
+                            const itemTotal = product.price * quantity;
+                            orderItems.push({
+                                productId: product.id,
+                                productName: product.name,
+                                quantity: quantity,
+                                unit: product.unit,
+                                unitPrice: product.price,
+                                totalPrice: itemTotal
+                            });
+                            subTotal += itemTotal;
+                        }
+                    }
+                });
+
+                const taxAmount = Math.floor(subTotal * 0.10);
+                const totalAmount = subTotal + taxAmount;
+
+                const orderData = {
+                    customerId: selectedCustomer.customerId,
+                    customerInfo: {
+                        id: selectedCustomer.id,
+                        companyName: selectedCustomer.name,
+                        contactPerson: selectedCustomer.contact,
+                        phone: selectedCustomer.phone
+                    },
+                    items: orderItems,
+                    liffUserId: userProfile.userId,
+                    orderTotal: {
+                        subTotal: subTotal,
+                        taxAmount: taxAmount,
+                        total: totalAmount
+                    }
+                };
+
+                const response = await fetch(`${API_BASE_URL}/api/orders`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(orderData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showSuccessPage(result.orderNumber, totalAmount);
+                } else {
+                    throw new Error(result.error);
+                }
+
+            } catch (error) {
+                console.error('注文送信エラー:', error);
+                alert('注文の送信に失敗しました。もう一度お試しください。');
+                submitBtn.textContent = '注文を送信';
+                submitBtn.disabled = false;
+                updateSubmitButton();
+            }
+        }
+
+        // 成功ページ表示
+        function showSuccessPage(orderNumber, totalAmount) {
+            document.getElementById('app').innerHTML = `
+                <div class="header">
+                    <h1>✅ 注文完了</h1>
+                    <p>ご注文ありがとうございました</p>
+                </div>
+                
+                <div class="success-message">
+                    <div class="success-icon">✓</div>
+                    <h2 style="color: #059669; margin-bottom: 16px;">注文を受け付けました</h2>
+                    <div style="background: #f9fafb; padding: 20px; border-radius: 12px; margin: 20px 0;">
+                        <div style="margin-bottom: 12px;">
+                            <strong>注文番号:</strong> ${orderNumber}
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <strong>合計金額:</strong> ¥${totalAmount.toLocaleString()}
+                        </div>
+                        <div>
+                            <strong>注文日時:</strong> ${new Date().toLocaleString('ja-JP')}
+                        </div>
+                    </div>
+                    <p style="color: #6b7280; line-height: 1.6;">
+                        注文内容は管理システムに送信されました。<br>
+                        配送については別途ご連絡いたします。
+                    </p>
+                </div>
+                
+                <button class="submit-btn" onclick="location.reload()">
+                    新しい注文を作成
+                </button>
+            `;
+        }
+
+        // ページ読み込み時に初期化
+        document.addEventListener('DOMContentLoaded', initialize);
+    </script>
+</body>
+</html>

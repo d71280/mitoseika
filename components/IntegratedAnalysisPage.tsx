@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Order } from '../types';
+import { supabase, fetchOrdersWithDetails, Order as DbOrder } from '../lib/supabase';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import { ChartBarIcon } from './icons/ChartBarIcon';
@@ -8,9 +9,7 @@ import { PresentationChartLineIcon } from './icons/PresentationChartLineIcon';
 import { CurrencyYenIcon } from './icons/CurrencyYenIcon';
 import { ShoppingCartIcon } from './icons/ShoppingCartIcon';
 
-interface IntegratedAnalysisPageProps {
-  orders: Order[];
-}
+interface IntegratedAnalysisPageProps {}
 
 type AnalysisTab = 'overview' | 'purchase-analysis' | 'client-timeline' | 'product-timeline';
 
@@ -50,22 +49,55 @@ const getOneMonthAgoDate = () => {
   return oneMonthAgo.toISOString().split('T')[0];
 };
 
-const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders }) => {
+const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = () => {
   const [activeTab, setActiveTab] = useState<AnalysisTab>('overview');
   const [startDate, setStartDate] = useState<string>(getOneMonthAgoDate());
   const [endDate, setEndDate] = useState<string>(getTodayDate());
   const [selectedClient, setSelectedClient] = useState<string>('all');
   const [selectedProduct, setSelectedProduct] = useState<string>('all');
+  const [orders, setOrders] = useState<DbOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchAllOrders();
+    
+    // リアルタイム購読
+    const subscription = supabase
+      .channel('orders-changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'orders' },
+        () => {
+          fetchAllOrders();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const fetchAllOrders = async () => {
+    try {
+      setLoading(true);
+      const allOrders = await fetchOrdersWithDetails(1000);
+      setOrders(allOrders);
+    } catch (error) {
+      console.error('注文データ取得エラー:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredOrders = useMemo(() => {
     let filtered = orders;
     
     if (startDate) {
-      filtered = filtered.filter(order => order.issueDate >= startDate);
+      filtered = filtered.filter(order => order.order_date >= startDate);
     }
     
     if (endDate) {
-      filtered = filtered.filter(order => order.issueDate <= endDate);
+      filtered = filtered.filter(order => order.order_date <= endDate);
     }
     
     return filtered;
@@ -74,11 +106,11 @@ const IntegratedAnalysisPage: React.FC<IntegratedAnalysisPageProps> = ({ orders 
   // 注文状況サマリー
   const orderSummary = useMemo(() => {
     const totalOrders = filteredOrders.length;
-    const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+    const totalRevenue = filteredOrders.reduce((sum, order) => sum + (order.total_amount || 0), 0);
     const estimatedProfit = filteredOrders.reduce((sum, order) => {
       const profit = order.items.reduce((itemSum, item) => {
-        const estimatedCost = item.unitPrice * 0.6; // 仮の原価率60%
-        return itemSum + ((item.unitPrice - estimatedCost) * item.quantity);
+        const estimatedCost = item.unit_price * 0.6; // 仮の原価率60%
+        return itemSum + ((item.unit_price - estimatedCost) * item.quantity);
       }, 0);
       return sum + profit;
     }, 0);
