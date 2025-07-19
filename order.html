@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>水戸青果 - LINE注文システム</title>
+    <title>顧客注文 - 水戸青果</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap');
@@ -16,7 +16,7 @@
         
         body {
             font-family: 'Noto Sans JP', sans-serif;
-            background: linear-gradient(135deg, #f0fdf4 0%, #eff6ff 100%);
+            background: linear-gradient(135deg, #e0f2fe 0%, #f3e8ff 100%);
             min-height: 100vh;
             color: #1f2937;
         }
@@ -30,21 +30,36 @@
         }
         
         .header {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
             color: white;
-            padding: 20px;
+            padding: 30px 20px;
             text-align: center;
         }
         
-        .header h1 {
+        .header .logo {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
             font-size: 24px;
-            font-weight: 600;
+            color: #3b82f6;
+            font-weight: bold;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
             margin-bottom: 8px;
         }
         
         .header p {
-            font-size: 14px;
+            font-size: 16px;
             opacity: 0.9;
+            font-weight: 400;
         }
         
         .section {
@@ -139,7 +154,8 @@
         }
         
         .product-item:hover {
-            border-color: #e5e7eb;
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
         }
         
         .product-header {
@@ -415,8 +431,9 @@
         function showOrderForm() {
             document.getElementById('app').innerHTML = `
                 <div class="header">
-                    <h1>🥬 水戸青果 注文システム</h1>
-                    <p>ようこそ、${userProfile.displayName}さん</p>
+                    <div class="logo">🥬</div>
+                    <h1>水戸青果</h1>
+                    <p>かんたん注文フォーム</p>
                 </div>
                 
                 <div class="section">
