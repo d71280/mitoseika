@@ -6,11 +6,10 @@ import { PencilSquareIcon } from './icons/PencilSquareIcon';
 import { TrashIcon } from './icons/TrashIcon';
 
 interface Product {
-  id: number;
+  id: string;  // UUID型
   name: string;
   unit: string;
   category?: string;
-  description?: string;
   created_at?: string;
 }
 
@@ -18,7 +17,6 @@ interface ProductFormData {
   name: string;
   unit: string;
   category: string;
-  description: string;
 }
 
 const ProductMasterPage: React.FC = () => {
@@ -29,8 +27,7 @@ const ProductMasterPage: React.FC = () => {
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     unit: '',
-    category: '',
-    description: ''
+    category: ''
   });
 
   const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -67,8 +64,7 @@ const ProductMasterPage: React.FC = () => {
     setFormData({
       name: '',
       unit: '',
-      category: '',
-      description: ''
+      category: ''
     });
     setEditingProduct(null);
     setShowForm(false);
@@ -85,8 +81,7 @@ const ProductMasterPage: React.FC = () => {
     setFormData({
       name: product.name,
       unit: product.unit,
-      category: product.category || '',
-      description: product.description || ''
+      category: product.category || ''
     });
     setEditingProduct(product);
     setShowForm(true);
@@ -116,8 +111,7 @@ const ProductMasterPage: React.FC = () => {
         body: JSON.stringify({
           name: formData.name,
           unit: formData.unit,
-          category: formData.category || null,
-          description: formData.description || null
+          category: formData.category || null
         })
       });
 
@@ -199,7 +193,6 @@ const ProductMasterPage: React.FC = () => {
                   <th className="text-left py-2 px-4">商品名</th>
                   <th className="text-left py-2 px-4">単位</th>
                   <th className="text-left py-2 px-4">カテゴリ</th>
-                  <th className="text-left py-2 px-4">説明</th>
                   <th className="text-left py-2 px-4">操作</th>
                 </tr>
               </thead>
@@ -209,7 +202,6 @@ const ProductMasterPage: React.FC = () => {
                     <td className="py-3 px-4 font-medium">{product.name}</td>
                     <td className="py-3 px-4">{product.unit}</td>
                     <td className="py-3 px-4">{product.category || '-'}</td>
-                    <td className="py-3 px-4 max-w-xs truncate">{product.description || '-'}</td>
                     <td className="py-3 px-4">
                       <div className="flex space-x-2">
                         <button
@@ -295,19 +287,6 @@ const ProductMasterPage: React.FC = () => {
                   placeholder="例: 野菜"
                 />
               </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                説明
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                rows={3}
-                placeholder="商品の詳細情報があれば入力してください"
-              />
             </div>
 
             <div className="flex justify-end space-x-3">

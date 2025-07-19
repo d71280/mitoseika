@@ -318,7 +318,12 @@ app.post('/api/products', async (req, res) => {
 
     const { data, error } = await supabase
       .from('products')
-      .insert([{ name, unit, category, description }])
+      .insert([{ 
+        name, 
+        unit, 
+        category: category || null,
+        is_active: true
+      }])
       .select()
 
     if (error) {
@@ -352,7 +357,11 @@ app.put('/api/products/:id', async (req, res) => {
 
     const { data, error } = await supabase
       .from('products')
-      .update({ name, unit, category, description })
+      .update({ 
+        name, 
+        unit, 
+        category: category || null
+      })
       .eq('id', id)
       .select()
 
@@ -423,20 +432,23 @@ app.get('/api/products', async (req, res) => {
   try {
     const { data: productsData, error } = await supabase
       .from('products')
-      .select('*')
+      .select('id, name, unit, category')
+      .eq('is_active', true)
       .order('name')
 
     if (error) {
       console.error('Error fetching products:', error)
       return res.status(500).json({ 
         success: false, 
-        error: 'Failed to fetch products' 
+        error: 'Failed to fetch products: ' + error.message 
       })
     }
 
+    console.log('Products fetched successfully:', productsData?.length || 0, 'items')
+
     res.status(200).json({
       success: true,
-      products: productsData
+      products: productsData || []
     })
 
   } catch (error) {

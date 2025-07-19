@@ -494,10 +494,10 @@
             const orderItems = [];
             for (const [productId, item] of Object.entries(productQuantities)) {
                 if (item && item.quantity > 0 && item.price > 0) {
-                    const product = products.find(p => p.id === parseInt(productId));
+                    const product = products.find(p => p.id === productId);
                     if (product) {
                         orderItems.push({
-                            product_id: parseInt(productId),
+                            product_id: productId,
                             product_name: product.name,
                             quantity: item.quantity,
                             unit_price: item.price,
