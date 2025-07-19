@@ -290,7 +290,7 @@ app.get('/api/customers/:customerId', async (req, res) => {
     const { data: clientData, error } = await supabase
       .from('clients')
       .select('*')
-      .eq('customer_id', customerId)
+      .eq('customerId', customerId)
       .single()
 
     if (error) {
@@ -321,7 +321,7 @@ app.get('/api/clients', async (req, res) => {
     const { data: clients, error } = await supabase
       .from('clients')
       .select('*')
-      .order('customer_id', { ascending: true })
+      .order('customerId', { ascending: true })
 
     if (error) {
       console.error('Error fetching clients:', error)
