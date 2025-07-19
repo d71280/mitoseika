@@ -31,9 +31,10 @@ export default defineConfig(({ mode }) => {
           name: 'copy-liff',
           writeBundle() {
             try {
+              copyFileSync('order.html', 'dist/order.html');
               copyFileSync('liff-order.html', 'dist/liff-order.html');
               copyFileSync('docs/index.html', 'dist/docs-index.html');
-              console.log('liff-order.html copied to dist/');
+              console.log('order.html and liff-order.html copied to dist/');
             } catch (err) {
               console.log('Failed to copy files:', err instanceof Error ? err.message : String(err));
             }
