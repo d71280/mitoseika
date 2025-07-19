@@ -2,17 +2,6 @@
   "public": true,
   "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "functions": {
-    "server.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/server.js"
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",
