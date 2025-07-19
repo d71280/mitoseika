@@ -31,6 +31,15 @@ jobs:
       
       - name: Build
         run: npm run build
+        env:
+          NEXT_PUBLIC_LIFF_ID: ${{ secrets.NEXT_PUBLIC_LIFF_ID }}
+      
+      - name: Inject environment variables into LIFF
+        run: |
+          LIFF_ID="${{ secrets.NEXT_PUBLIC_LIFF_ID }}"
+          if [ -n "$LIFF_ID" ]; then
+            sed -i "s/window\.NEXT_PUBLIC_LIFF_ID || '2007611355-MbZ09XRP'/'$LIFF_ID'/g" dist/liff.html
+          fi
         
       - name: Setup Pages
         uses: actions/configure-pages@v4
