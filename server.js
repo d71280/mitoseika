@@ -338,7 +338,7 @@ app.post('/api/products', express.json(), async (req, res) => {
       .insert([{ 
         name, 
         unit, 
-        category: category || null
+        category: category || '未分類' // nullではなくデフォルト値を設定
       }])
       .select()
 
@@ -380,7 +380,7 @@ app.put('/api/products/:id', express.json(), async (req, res) => {
       .update({ 
         name, 
         unit, 
-        category: category || null
+        category: category || '未分類'
       })
       .eq('id', id)
       .select()
@@ -565,6 +565,61 @@ app.get('/api/dashboard/stats', async (req, res) => {
   }
 })
 
+// 週間パフォーマンスデータAPI
+app.get('/api/dashboard/weekly-performance', async (req, res) => {
+  try {
+    console.log('Weekly performance API called')
+    
+    const weeklyData = []
+    const today = new Date()
+    const dayNames = ['日', '月', '火', '水', '木', '金', '土']
+    
+    // 過去7日間のデータを取得
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today)
+      date.setDate(today.getDate() - i)
+      const dateStr = date.toISOString().split('T')[0]
+      const dayName = dayNames[date.getDay()]
+      
+      // その日の注文データを取得
+      const { data: dayOrders, error } = await supabase
+        .from('orders')
+        .select('*')
+        .gte('created_at', dateStr)
+        .lt('created_at', dateStr + 'T23:59:59')
+      
+      if (error) {
+        console.error(`${dateStr}の注文取得エラー:`, error)
+      }
+      
+      // 売上と粗利を計算
+      const sales = dayOrders?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0
+      const profit = sales * 0.2 // 粗利率20%と仮定
+      
+      weeklyData.push({
+        name: dayName,
+        sales: Math.round(sales / 10000), // 万円単位
+        profit: Math.round(profit / 10000), // 万円単位
+        date: dateStr
+      })
+    }
+    
+    console.log('Weekly performance data calculated:', weeklyData)
+    
+    res.status(200).json({
+      success: true,
+      data: weeklyData
+    })
+    
+  } catch (error) {
+    console.error('Weekly performance API error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error: ' + error.message
+    })
+  }
+})
+
 // サーバー起動
 app.listen(port, () => {
   console.log(`🚀 LINE Bot Webhook Server is running on port ${port}`)
@@ -574,4 +629,5 @@ app.listen(port, () => {
   console.log(`👥 Customer API: http://localhost:${port}/api/customers/:customerId`)
   console.log(`🛍️ Products API: http://localhost:${port}/api/products`)
   console.log(`📈 Dashboard Stats API: http://localhost:${port}/api/dashboard/stats`)
+  console.log(`📊 Weekly Performance API: http://localhost:${port}/api/dashboard/weekly-performance`)
 }) 
