@@ -50,17 +50,36 @@ const CustomerOrderForm: React.FC<CustomerOrderFormProps> = ({ onSubmitOrder }) 
   // 顧客データを取得
   const fetchClient = async (customerIdValue: string) => {
     try {
+      console.log('顧客ID検索開始:', customerIdValue);
       const response = await fetch(`${API_BASE_URL}/api/clients`);
       const data = await response.json();
       
+      console.log('API レスポンス:', data);
+      
       if (data.success) {
+        console.log('取得した顧客データ:', data.clients);
+        console.log('検索対象の顧客ID:', customerIdValue);
+        
+        // 各顧客のcustomerIdをログ出力
+        data.clients.forEach((c: Client, index: number) => {
+          console.log(`顧客 ${index}:`, {
+            id: c.id,
+            customerId: c.customerId,
+            companyName: c.companyName
+          });
+        });
+        
         const client = data.clients.find((c: Client) => c.customerId === customerIdValue);
+        console.log('見つかった顧客:', client);
+        
         if (client) {
           setSelectedClient(client);
           setError('');
+          console.log('顧客設定成功:', client.companyName);
         } else {
           setSelectedClient(null);
           setError('顧客IDが見つかりません');
+          console.log('顧客が見つかりませんでした');
         }
       } else {
         console.error('顧客取得エラー:', data.error);
