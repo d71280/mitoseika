@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>水戸青果 - 注文システム（LIFF版 ロット対応）</title>
+    <title>水戸青果 - 注文システム（LIFF版 ロット対応 認証強化）</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -109,6 +109,13 @@
         function initializeLiff() {
             console.log('LIFF初期化開始:', LIFF_ID);
             console.log('現在のURL:', window.location.href);
+            console.log('プロトコル:', window.location.protocol);
+            
+            // HTTPS強制チェック
+            if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+                showError('HTTPSが必要です。セキュアな接続でアクセスしてください。');
+                return;
+            }
             
             showLoading('LINE認証を確認中...');
 
@@ -117,7 +124,13 @@
                 return;
             }
 
-            liff.init({ liffId: LIFF_ID })
+            // LIFF初期化のオプションを詳細設定
+            const liffOptions = {
+                liffId: LIFF_ID,
+                withLoginOnExternalBrowser: true
+            };
+
+            liff.init(liffOptions)
                 .then(() => {
                     console.log('LIFF初期化成功');
                     console.log('LIFF環境情報:', {
@@ -126,13 +139,22 @@
                         os: liff.getOS(),
                         version: liff.getVersion(),
                         language: liff.getLanguage(),
-                        isApiAvailable: liff.isApiAvailable('sendMessages')
+                        isApiAvailable: liff.isApiAvailable('sendMessages'),
+                        context: liff.getContext()
                     });
                     
                     if (!liff.isLoggedIn()) {
                         console.log('ユーザー未ログイン - ログイン画面に遷移');
                         showLoading('LINE認証画面に移動中...');
-                        liff.login();
+                        
+                        // 外部ブラウザ対応のログイン
+                        if (liff.isInClient()) {
+                            liff.login();
+                        } else {
+                            liff.login({
+                                redirectUri: window.location.href
+                            });
+                        }
                         return;
                     }
 
@@ -151,15 +173,23 @@
                 })
                 .catch(err => {
                     console.error('LIFF初期化エラー:', err);
+                    console.error('エラーの詳細:', {
+                        name: err.name,
+                        message: err.message,
+                        stack: err.stack
+                    });
+                    
                     let errorMessage = 'LIFF初期化に失敗しました。';
                     
                     if (err.message) {
                         if (err.message.includes('LIFF app not found')) {
-                            errorMessage = 'LIFF IDが正しくありません。';
+                            errorMessage = 'LIFF IDが正しくありません。管理者に連絡してください。';
                         } else if (err.message.includes('Forbidden')) {
-                            errorMessage = 'アクセス権限がありません。';
+                            errorMessage = 'アクセス権限がありません。正しいURLからアクセスしてください。';
+                        } else if (err.message.includes('Invalid LIFF URL')) {
+                            errorMessage = 'LIFFのエンドポイントURLが正しく設定されていません。';
                         } else {
-                            errorMessage = err.message;
+                            errorMessage = `エラー: ${err.message}`;
                         }
                     }
                     
@@ -189,10 +219,12 @@
 
                         <!-- デバッグ情報 -->
                         <div class="mb-4 p-3 bg-gray-100 rounded text-xs">
-                            <p>アクセス先: ${window.location.href}</p>
-                            <p>LIFF ID: ${LIFF_ID}</p>
-                            <p>認証状態: ${isLiffReady ? '成功' : '未認証'}</p>
-                            <p>版数: ロット対応版 v2.0</p>
+                            <p><strong>アクセス先:</strong> ${window.location.href}</p>
+                            <p><strong>LIFF ID:</strong> ${LIFF_ID}</p>
+                            <p><strong>認証状態:</strong> ${isLiffReady ? '成功' : '未認証'}</p>
+                            <p><strong>LIFF環境:</strong> ${liff && liff.isInClient() ? 'LINE内' : '外部ブラウザ'}</p>
+                            <p><strong>プロトコル:</strong> ${window.location.protocol}</p>
+                            <p><strong>版数:</strong> ロット対応版 v2.1 (認証強化)</p>
                         </div>
 
                         <!-- 顧客ID入力 -->
