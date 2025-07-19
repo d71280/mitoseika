@@ -107,12 +107,20 @@
 
         // LIFF初期化
         function initializeLiff() {
-            console.log('LIFF初期化開始:', LIFF_ID);
+            console.log('=== LIFF初期化デバッグ開始 ===');
+            console.log('LIFF ID:', LIFF_ID);
             console.log('現在のURL:', window.location.href);
             console.log('プロトコル:', window.location.protocol);
+            console.log('ホスト:', window.location.host);
+            console.log('User Agent:', navigator.userAgent);
+            
+            // LIFF SDKの存在確認
+            console.log('LIFF SDK存在確認:', typeof liff);
+            console.log('LIFF SDKバージョン:', window.liff?.getVersion ? window.liff.getVersion() : 'unknown');
             
             // HTTPS強制チェック
             if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+                console.error('HTTPS必須エラー');
                 showError('HTTPSが必要です。セキュアな接続でアクセスしてください。');
                 return;
             }
@@ -120,6 +128,7 @@
             showLoading('LINE認証を確認中...');
 
             if (typeof liff === 'undefined') {
+                console.error('LIFF SDK未読み込み');
                 showError('LIFF SDKが読み込まれていません。ページを再読み込みしてください。');
                 return;
             }
@@ -129,6 +138,8 @@
                 liffId: LIFF_ID,
                 withLoginOnExternalBrowser: true
             };
+            
+            console.log('LIFF初期化オプション:', liffOptions);
 
             liff.init(liffOptions)
                 .then(() => {
