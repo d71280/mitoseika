@@ -54,15 +54,15 @@
 
         // 商品データ
         const products = [
-            { id: 'prod_cabbage', name: 'キャベツ', unit: '個', salePrice: 150 },
-            { id: 'prod_cucumber', name: 'きゅうり', unit: '個', salePrice: 2000 },
-            { id: 'prod_hakusai', name: '白菜', unit: '個', salePrice: 300 },
-            { id: 'prod_carrot', name: '人参', unit: '個', salePrice: 250 },
-            { id: 'prod_daikon', name: '大根', unit: '個', salePrice: 160 },
-            { id: 'prod_lettuce', name: 'レタス', unit: '個', salePrice: 180 },
-            { id: 'prod_potato', name: 'じゃがいも（メークイン）', unit: '個', salePrice: 200 },
-            { id: 'prod_tomato', name: 'トマト', unit: '個', salePrice: 1200 },
-            { id: 'prod_onion', name: '玉ねぎ', unit: '個', salePrice: 300 }
+            { id: 'prod_cabbage', name: 'キャベツ', unit: '個', salePrice: 150, lotSize: 10, lotPrice: 1500 },
+            { id: 'prod_cucumber', name: 'きゅうり', unit: '個', salePrice: 2000, lotSize: 1, lotPrice: 2000 },
+            { id: 'prod_hakusai', name: '白菜', unit: '個', salePrice: 300, lotSize: 8, lotPrice: 2400 },
+            { id: 'prod_carrot', name: '人参', unit: '個', salePrice: 250, lotSize: 5, lotPrice: 1250 },
+            { id: 'prod_daikon', name: '大根', unit: '個', salePrice: 160, lotSize: 6, lotPrice: 960 },
+            { id: 'prod_lettuce', name: 'レタス', unit: '個', salePrice: 180, lotSize: 8, lotPrice: 1440 },
+            { id: 'prod_potato', name: 'じゃがいも（メークイン）', unit: '個', salePrice: 200, lotSize: 10, lotPrice: 2000 },
+            { id: 'prod_tomato', name: 'トマト', unit: '個', salePrice: 1200, lotSize: 1, lotPrice: 1200 },
+            { id: 'prod_onion', name: '玉ねぎ', unit: '個', salePrice: 300, lotSize: 5, lotPrice: 1500 }
         ].sort((a, b) => a.name.localeCompare(b.name, 'ja'));
 
         // 顧客データ
@@ -247,12 +247,12 @@
                 <div class="border border-gray-200 rounded-lg p-3">
                     <div class="flex justify-between items-center mb-2">
                         <h3 class="font-medium text-gray-800">${product.name}</h3>
-                        <span class="text-sm text-gray-600">¥${product.salePrice.toLocaleString()}/${product.unit}</span>
+                        <span class="text-sm text-gray-600">1ロット（${product.lotSize}${product.unit}）¥${product.lotPrice.toLocaleString()}</span>
                     </div>
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
                             <input type="number" id="qty-${product.id}" min="0" class="w-16 px-2 py-1 border border-gray-300 rounded text-center" onchange="updateQuantity('${product.id}', this.value)">
-                            <span class="ml-1 text-sm">${product.unit}</span>
+                            <span class="ml-1 text-sm">ロット</span>
                         </div>
                         <div class="text-right">
                             <span id="subtotal-${product.id}" class="text-gray-400">-</span>
@@ -302,7 +302,7 @@
             productQuantities[productId] = quantity;
             
             const product = products.find(p => p.id === productId);
-            const subtotal = quantity * product.salePrice;
+            const subtotal = quantity * product.lotPrice;
             const subtotalElement = document.getElementById(`subtotal-${productId}`);
             
             if (quantity > 0) {
@@ -323,7 +323,7 @@
             Object.entries(productQuantities).forEach(([productId, quantity]) => {
                 if (quantity > 0) {
                     const product = products.find(p => p.id === productId);
-                    total += product.salePrice * quantity;
+                    total += product.lotPrice * quantity;
                 }
             });
             document.getElementById('total-amount').textContent = `¥${total.toLocaleString()}`;
@@ -358,12 +358,16 @@
             Object.entries(productQuantities).forEach(([productId, quantity]) => {
                 if (quantity > 0) {
                     const product = products.find(p => p.id === productId);
-                    const itemTotal = product.salePrice * quantity;
+                    const itemTotal = product.lotPrice * quantity;
+                    const totalUnits = product.lotSize * quantity;
                     orderItems.push({
                         productName: product.name,
                         quantity: quantity,
-                        unit: product.unit,
-                        unitPrice: product.salePrice,
+                        unit: 'ロット',
+                        lotSize: product.lotSize,
+                        totalUnits: totalUnits,
+                        originalUnit: product.unit,
+                        unitPrice: product.lotPrice,
                         totalPrice: itemTotal
                     });
                     totalAmount += itemTotal;
@@ -381,7 +385,7 @@
 担当者: ${selectedClient.contactPerson}
 
 【注文内容】
-${orderItems.map(item => `${item.productName} ${item.quantity}${item.unit} ¥${item.totalPrice.toLocaleString()}`).join('\n')}
+${orderItems.map(item => `${item.productName} ${item.quantity}ロット（計${item.totalUnits}${item.originalUnit}） ¥${item.totalPrice.toLocaleString()}`).join('\n')}
 
 合計: ¥${totalAmount.toLocaleString()}
 
