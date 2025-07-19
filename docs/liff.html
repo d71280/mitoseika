@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水戸青果 - 注文システム（LIFF版）</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #f0fdf4 0%, #eff6ff 100%);
+            min-height: 100vh;
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #10b981;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="liff-app">
+        <div class="loading">
+            <div class="spinner"></div>
+            <p class="mt-4 text-gray-600">LIFF初期化中...</p>
+        </div>
+    </div>
+
+    <script>
+        // LIFF ID - 固定値
+        const LIFF_ID = '2007611355-MbZ09XRP';
+
+        // 商品データ
+        const products = [
+            { id: 'prod_cabbage', name: 'キャベツ', unit: '個', salePrice: 150 },
+            { id: 'prod_cucumber', name: 'きゅうり', unit: '個', salePrice: 2000 },
+            { id: 'prod_hakusai', name: '白菜', unit: '個', salePrice: 300 },
+            { id: 'prod_carrot', name: '人参', unit: '個', salePrice: 250 },
+            { id: 'prod_daikon', name: '大根', unit: '個', salePrice: 160 },
+            { id: 'prod_lettuce', name: 'レタス', unit: '個', salePrice: 180 },
+            { id: 'prod_potato', name: 'じゃがいも（メークイン）', unit: '個', salePrice: 200 },
+            { id: 'prod_tomato', name: 'トマト', unit: '個', salePrice: 1200 },
+            { id: 'prod_onion', name: '玉ねぎ', unit: '個', salePrice: 300 }
+        ].sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+
+        // 顧客データ
+        const clients = [
+            { id: 'client_AStore', customerId: '0001', companyName: 'A商店', contactPerson: '山田 太郎', phone: '03-1234-5678' },
+            { id: 'client_BDiner', customerId: '0002', companyName: 'B食堂', contactPerson: '佐藤 花子', phone: '03-9876-5432' },
+            { id: 'client_CVegeShop', customerId: '0003', companyName: 'C青果店', contactPerson: '田中 一郎', phone: '029-111-2222' },
+            { id: 'client_NewHotel', customerId: '0004', companyName: '水戸ニューホテル', contactPerson: '鈴木 次郎', phone: '029-333-4444' }
+        ];
+
+        let userProfile = null;
+        let selectedClient = null;
+        let productQuantities = {};
+        let isLiffReady = false;
+
+        // ローディング状態管理
+        function showLoading(message = 'LIFF初期化中...') {
+            document.getElementById('liff-app').innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p class="mt-4 text-gray-600">${message}</p>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            document.getElementById('liff-app').innerHTML = `
+                <div class="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg mt-20">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-red-600 text-2xl">⚠️</span>
+                        </div>
+                        <h2 class="text-xl font-bold text-red-800 mb-2">エラーが発生しました</h2>
+                        <p class="text-red-600 mb-4">${message}</p>
+                        <button onclick="initializeLiff()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+                            再試行
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // LIFF初期化
+        function initializeLiff() {
+            console.log('LIFF初期化開始:', LIFF_ID);
+            console.log('現在のURL:', window.location.href);
+            
+            showLoading('LINE認証を確認中...');
+
+            if (typeof liff === 'undefined') {
+                showError('LIFF SDKが読み込まれていません。ページを再読み込みしてください。');
+                return;
+            }
+
+            liff.init({ liffId: LIFF_ID })
+                .then(() => {
+                    console.log('LIFF初期化成功');
+                    console.log('LIFF環境情報:', {
+                        isInClient: liff.isInClient(),
+                        isLoggedIn: liff.isLoggedIn(),
+                        os: liff.getOS(),
+                        version: liff.getVersion(),
+                        language: liff.getLanguage(),
+                        isApiAvailable: liff.isApiAvailable('sendMessages')
+                    });
+                    
+                    if (!liff.isLoggedIn()) {
+                        console.log('ユーザー未ログイン - ログイン画面に遷移');
+                        showLoading('LINE認証画面に移動中...');
+                        liff.login();
+                        return;
+                    }
+
+                    console.log('ユーザーログイン済み');
+                    isLiffReady = true;
+                    
+                    // ユーザープロフィール取得
+                    return liff.getProfile();
+                })
+                .then(profile => {
+                    if (profile) {
+                        userProfile = profile;
+                        console.log('ユーザープロフィール取得成功:', profile);
+                    }
+                    renderApp();
+                })
+                .catch(err => {
+                    console.error('LIFF初期化エラー:', err);
+                    let errorMessage = 'LIFF初期化に失敗しました。';
+                    
+                    if (err.message) {
+                        if (err.message.includes('LIFF app not found')) {
+                            errorMessage = 'LIFF IDが正しくありません。';
+                        } else if (err.message.includes('Forbidden')) {
+                            errorMessage = 'アクセス権限がありません。';
+                        } else {
+                            errorMessage = err.message;
+                        }
+                    }
+                    
+                    showError(errorMessage);
+                });
+        }
+
+        // アプリ描画
+        function renderApp() {
+            console.log('アプリ描画開始');
+            const app = document.getElementById('liff-app');
+            app.innerHTML = `
+                <div class="max-w-4xl mx-auto p-4">
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <!-- ヘッダー -->
+                        <div class="text-center mb-6">
+                            <div class="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center mx-auto mb-3">
+                                <span class="text-white font-bold text-xl">水</span>
+                            </div>
+                            <h1 class="text-2xl font-bold text-green-800">水戸青果 注文システム</h1>
+                            ${userProfile ? `<p class="text-sm text-green-600 mt-2">ようこそ、${userProfile.displayName}さん</p>` : ''}
+                            <div class="flex items-center justify-center mt-2">
+                                <div class="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                                <span class="text-sm text-green-600">LINE認証済み</span>
+                            </div>
+                        </div>
+
+                        <!-- デバッグ情報 -->
+                        <div class="mb-4 p-3 bg-gray-100 rounded text-xs">
+                            <p>アクセス先: ${window.location.href}</p>
+                            <p>LIFF ID: ${LIFF_ID}</p>
+                            <p>認証状態: ${isLiffReady ? '成功' : '未認証'}</p>
+                        </div>
+
+                        <!-- 顧客ID入力 -->
+                        <div class="mb-6">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-3">顧客情報</h2>
+                            <div class="mb-3">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    顧客ID <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" id="customerId" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500" placeholder="例: 0001" onchange="handleCustomerIdChange()">
+                                <div id="error-message" class="mt-1 text-sm text-red-600 hidden"></div>
+                            </div>
+                            <div id="customer-info" class="bg-gray-50 p-3 rounded-lg hidden">
+                                <h3 class="font-medium text-gray-800 mb-2">顧客情報</h3>
+                                <div id="customer-details" class="grid grid-cols-1 gap-1 text-sm"></div>
+                            </div>
+                        </div>
+
+                        <!-- 商品注文 -->
+                        <div class="mb-6">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-3">商品注文</h2>
+                            <div id="product-list" class="space-y-3"></div>
+                            
+                            <!-- 合計 -->
+                            <div class="mt-4 p-3 bg-green-50 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-semibold text-gray-800">合計金額</span>
+                                    <span id="total-amount" class="text-xl font-bold text-green-800">¥0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 送信ボタン -->
+                        <div class="flex flex-col gap-3">
+                            <button id="submit-btn" onclick="submitOrder()" disabled class="w-full py-3 text-lg bg-gray-300 text-gray-500 rounded-md cursor-not-allowed">
+                                注文を送信
+                            </button>
+                            <button onclick="clearForm()" class="w-full py-2 bg-gray-200 text-gray-900 rounded-md hover:bg-gray-300">
+                                クリア
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            renderProducts();
+        }
+
+        // 商品リスト描画
+        function renderProducts() {
+            const productList = document.getElementById('product-list');
+            productList.innerHTML = products.map(product => `
+                <div class="border border-gray-200 rounded-lg p-3">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-medium text-gray-800">${product.name}</h3>
+                        <span class="text-sm text-gray-600">¥${product.salePrice.toLocaleString()}/${product.unit}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input type="number" id="qty-${product.id}" min="0" class="w-16 px-2 py-1 border border-gray-300 rounded text-center" onchange="updateQuantity('${product.id}', this.value)">
+                            <span class="ml-1 text-sm">${product.unit}</span>
+                        </div>
+                        <div class="text-right">
+                            <span id="subtotal-${product.id}" class="text-gray-400">-</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 顧客ID変更処理
+        function handleCustomerIdChange() {
+            const customerId = document.getElementById('customerId').value;
+            const errorDiv = document.getElementById('error-message');
+            const customerInfo = document.getElementById('customer-info');
+            const customerDetails = document.getElementById('customer-details');
+
+            if (customerId) {
+                const client = clients.find(c => c.customerId === customerId);
+                if (client) {
+                    selectedClient = client;
+                    customerDetails.innerHTML = `
+                        <div><span class="font-medium">会社名:</span> ${client.companyName}</div>
+                        <div><span class="font-medium">担当者:</span> ${client.contactPerson}</div>
+                        <div><span class="font-medium">電話:</span> ${client.phone}</div>
+                    `;
+                    customerInfo.classList.remove('hidden');
+                    errorDiv.classList.add('hidden');
+                    updateSubmitButton();
+                } else {
+                    selectedClient = null;
+                    customerInfo.classList.add('hidden');
+                    errorDiv.textContent = '顧客IDが見つかりません';
+                    errorDiv.classList.remove('hidden');
+                    updateSubmitButton();
+                }
+            } else {
+                selectedClient = null;
+                customerInfo.classList.add('hidden');
+                errorDiv.classList.add('hidden');
+                updateSubmitButton();
+            }
+        }
+
+        // 数量更新
+        function updateQuantity(productId, value) {
+            const quantity = parseInt(value) || 0;
+            productQuantities[productId] = quantity;
+            
+            const product = products.find(p => p.id === productId);
+            const subtotal = quantity * product.salePrice;
+            const subtotalElement = document.getElementById(`subtotal-${productId}`);
+            
+            if (quantity > 0) {
+                subtotalElement.textContent = `¥${subtotal.toLocaleString()}`;
+                subtotalElement.className = 'font-medium';
+            } else {
+                subtotalElement.textContent = '-';
+                subtotalElement.className = 'text-gray-400';
+            }
+            
+            updateTotal();
+            updateSubmitButton();
+        }
+
+        // 合計更新
+        function updateTotal() {
+            let total = 0;
+            Object.entries(productQuantities).forEach(([productId, quantity]) => {
+                if (quantity > 0) {
+                    const product = products.find(p => p.id === productId);
+                    total += product.salePrice * quantity;
+                }
+            });
+            document.getElementById('total-amount').textContent = `¥${total.toLocaleString()}`;
+        }
+
+        // 送信ボタン状態更新
+        function updateSubmitButton() {
+            const submitBtn = document.getElementById('submit-btn');
+            const hasItems = Object.values(productQuantities).some(qty => qty > 0);
+            
+            if (selectedClient && hasItems) {
+                submitBtn.disabled = false;
+                submitBtn.className = 'w-full py-3 text-lg bg-green-600 text-white rounded-md hover:bg-green-700';
+                submitBtn.textContent = '注文を送信';
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.className = 'w-full py-3 text-lg bg-gray-300 text-gray-500 rounded-md cursor-not-allowed';
+                submitBtn.textContent = '注文を送信';
+            }
+        }
+
+        // 注文送信
+        function submitOrder() {
+            if (!selectedClient) {
+                alert('顧客IDを正しく入力してください');
+                return;
+            }
+
+            const orderItems = [];
+            let totalAmount = 0;
+
+            Object.entries(productQuantities).forEach(([productId, quantity]) => {
+                if (quantity > 0) {
+                    const product = products.find(p => p.id === productId);
+                    const itemTotal = product.salePrice * quantity;
+                    orderItems.push({
+                        productName: product.name,
+                        quantity: quantity,
+                        unit: product.unit,
+                        unitPrice: product.salePrice,
+                        totalPrice: itemTotal
+                    });
+                    totalAmount += itemTotal;
+                }
+            });
+
+            if (orderItems.length === 0) {
+                alert('商品を選択してください');
+                return;
+            }
+
+            // LINEに注文内容を送信
+            const orderMessage = `【注文完了】
+顧客: ${selectedClient.companyName}
+担当者: ${selectedClient.contactPerson}
+
+【注文内容】
+${orderItems.map(item => `${item.productName} ${item.quantity}${item.unit} ¥${item.totalPrice.toLocaleString()}`).join('\n')}
+
+合計: ¥${totalAmount.toLocaleString()}
+
+注文日時: ${new Date().toLocaleString('ja-JP')}`;
+
+            if (isLiffReady && liff.isApiAvailable('sendMessages')) {
+                liff.sendMessages([{
+                    type: 'text',
+                    text: orderMessage
+                }]).then(() => {
+                    alert('注文をLINEに送信しました！');
+                    clearForm();
+                }).catch(err => {
+                    console.error('LINE送信エラー:', err);
+                    alert('LINE送信に失敗しました。注文内容をコピーします。');
+                    navigator.clipboard.writeText(orderMessage);
+                    clearForm();
+                });
+            } else {
+                alert('注文内容をコピーしました。LINEで送信してください。');
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(orderMessage);
+                }
+                clearForm();
+            }
+        }
+
+        // フォームクリア
+        function clearForm() {
+            document.getElementById('customerId').value = '';
+            selectedClient = null;
+            productQuantities = {};
+            
+            // UI更新
+            document.getElementById('customer-info').classList.add('hidden');
+            document.getElementById('error-message').classList.add('hidden');
+            
+            products.forEach(product => {
+                document.getElementById(`qty-${product.id}`).value = '';
+                document.getElementById(`subtotal-${product.id}`).textContent = '-';
+                document.getElementById(`subtotal-${product.id}`).className = 'text-gray-400';
+            });
+            
+            updateTotal();
+            updateSubmitButton();
+        }
+
+        // ページ読み込み時にLIFF初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM読み込み完了 - LIFF初期化開始');
+            initializeLiff();
+        });
+
+        // LIFF SDKが読み込まれた後にも初期化を試行
+        window.addEventListener('load', function() {
+            console.log('ページ読み込み完了');
+            if (!isLiffReady) {
+                setTimeout(() => {
+                    if (typeof liff !== 'undefined' && !isLiffReady) {
+                        console.log('遅延LIFF初期化実行');
+                        initializeLiff();
+                    }
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html>
