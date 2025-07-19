@@ -48,13 +48,14 @@ const ClientEditPage: React.FC<ClientEditPageProps> = ({ clientId, existingClien
   };
 
   const generateCustomerId = () => {
-    const now = new Date();
-    const year = now.getFullYear().toString().slice(-2);
-    const month = (now.getMonth() + 1).toString().padStart(2, '0');
-    const day = now.getDate().toString().padStart(2, '0');
-    const time = now.getHours().toString().padStart(2, '0') + now.getMinutes().toString().padStart(2, '0');
-    const random = Math.floor(Math.random() * 100).toString().padStart(2, '0');
-    const customerId = `C${year}${month}${day}${time}${random}`;
+    // Generate a 4-digit sequential number
+    const existingIds = existingClients
+      .map(client => client.customerId)
+      .filter(id => id && /^\d{4}$/.test(id))
+      .map(id => parseInt(id));
+    
+    const nextId = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
+    const customerId = nextId.toString().padStart(4, '0');
     setClientData(prev => ({ ...prev, customerId }));
   };
 
@@ -117,7 +118,7 @@ const ClientEditPage: React.FC<ClientEditPageProps> = ({ clientId, existingClien
               value={clientData.customerId || ''}
               onChange={handleChange}
               className="mt-1 block flex-1 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-              placeholder="例: C2507191030001"
+              placeholder="例: 0001"
             />
             <Button
               type="button"

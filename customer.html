@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水戸青果 - オンライン注文システム</title>
+    <script src="https://unpkg.com/react@19/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@19/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #f0fdf4 0%, #eff6ff 100%);
+        }
+        
+        .print-hidden {
+            display: block;
+        }
+        
+        @media print {
+            .print-hidden {
+                display: none !important;
+            }
+            
+            body {
+                background: white !important;
+            }
+        }
+    </style>
+</head>
+<body class="gradient-bg">
+    <div id="customer-app"></div>
+
+    <script type="text/babel">
+        // Mock data and components for customer interface
+        const { useState, useEffect } = React;
+
+        // Product data
+        const products = [
+            { id: 'prod_cabbage', name: 'キャベツ', unit: '個', salePrice: 150 },
+            { id: 'prod_cucumber', name: 'きゅうり', unit: 'ケース', salePrice: 2000 },
+            { id: 'prod_hakusai', name: '白菜', unit: '個', salePrice: 300 },
+            { id: 'prod_carrot', name: '人参', unit: 'kg', salePrice: 250 },
+            { id: 'prod_daikon', name: '大根', unit: '個', salePrice: 160 },
+            { id: 'prod_lettuce', name: 'レタス', unit: '個', salePrice: 180 },
+            { id: 'prod_potato', name: 'じゃがいも（メークイン）', unit: 'kg', salePrice: 200 },
+            { id: 'prod_tomato', name: 'トマト', unit: '箱', salePrice: 1200 },
+            { id: 'prod_onion', name: '玉ねぎ', unit: 'kg', salePrice: 300 }
+        ].sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+
+        // Client data
+        const clients = [
+            { id: 'client_AStore', customerId: '0001', companyName: 'A商店', contactPerson: '山田 太郎', phone: '03-1234-5678', address: '東京都渋谷区渋谷1-2-3 Aビル101号室' },
+            { id: 'client_BDiner', customerId: '0002', companyName: 'B食堂', contactPerson: '佐藤 花子', phone: '03-9876-5432', address: '東京都新宿区新宿4-5-6 Bプラザ地下1階' },
+            { id: 'client_CVegeShop', customerId: '0003', companyName: 'C青果店', contactPerson: '田中 一郎', phone: '029-111-2222', address: '茨城県水戸市駅南2-3-4 Cマーケット内' },
+            { id: 'client_NewHotel', customerId: '0004', companyName: '水戸ニューホテル', contactPerson: '鈴木 次郎', phone: '029-333-4444', address: '茨城県水戸市中央1-10-1' }
+        ];
+
+        // Button component
+        const Button = ({ children, onClick, variant = 'primary', disabled = false, className = '', type = 'button' }) => {
+            const baseClasses = 'px-4 py-2 rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2';
+            const variantClasses = {
+                primary: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 disabled:bg-gray-300',
+                secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-500',
+                danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500'
+            };
+
+            return (
+                <button
+                    type={type}
+                    onClick={onClick}
+                    disabled={disabled}
+                    className={`${baseClasses} ${variantClasses[variant]} ${className} ${disabled ? 'cursor-not-allowed' : ''}`}
+                >
+                    {children}
+                </button>
+            );
+        };
+
+        // Card component
+        const Card = ({ children, className = '' }) => {
+            return (
+                <div className={`bg-white rounded-lg shadow-lg ${className}`}>
+                    {children}
+                </div>
+            );
+        };
+
+        // Order Form Component
+        const CustomerOrderForm = ({ onSubmitOrder }) => {
+            const [customerId, setCustomerId] = useState('');
+            const [selectedClient, setSelectedClient] = useState(null);
+            const [productQuantities, setProductQuantities] = useState({});
+            const [deliveryDate, setDeliveryDate] = useState('');
+            const [notes, setNotes] = useState('');
+            const [error, setError] = useState('');
+
+            useEffect(() => {
+                if (customerId) {
+                    const client = clients.find(c => c.customerId === customerId);
+                    if (client) {
+                        setSelectedClient(client);
+                        setError('');
+                    } else {
+                        setSelectedClient(null);
+                        setError('顧客IDが見つかりません');
+                    }
+                } else {
+                    setSelectedClient(null);
+                    setError('');
+                }
+            }, [customerId]);
+
+            const handleQuantityChange = (productId, value) => {
+                setProductQuantities(prev => ({
+                    ...prev,
+                    [productId]: value
+                }));
+            };
+
+            const calculateTotal = () => {
+                let total = 0;
+                Object.entries(productQuantities).forEach(([productId, quantityStr]) => {
+                    const quantity = parseInt(quantityStr) || 0;
+                    if (quantity > 0) {
+                        const product = products.find(p => p.id === productId);
+                        if (product) {
+                            total += product.salePrice * quantity;
+                        }
+                    }
+                });
+                return total;
+            };
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                
+                if (!selectedClient) {
+                    setError('顧客IDを正しく入力してください');
+                    return;
+                }
+
+                const orderItems = [];
+                Object.entries(productQuantities).forEach(([productId, quantityStr]) => {
+                    const quantity = parseInt(quantityStr) || 0;
+                    if (quantity > 0) {
+                        const product = products.find(p => p.id === productId);
+                        if (product) {
+                            orderItems.push({
+                                productId: product.id,
+                                productName: product.name,
+                                quantity,
+                                unit: product.unit,
+                                unitPrice: product.salePrice,
+                                totalPrice: product.salePrice * quantity
+                            });
+                        }
+                    }
+                });
+
+                if (orderItems.length === 0) {
+                    setError('商品を選択してください');
+                    return;
+                }
+
+                const orderData = {
+                    customerId: selectedClient.customerId,
+                    clientId: selectedClient.id,
+                    customerInfo: {
+                        companyName: selectedClient.companyName,
+                        contactPerson: selectedClient.contactPerson,
+                        phone: selectedClient.phone,
+                        address: selectedClient.address
+                    },
+                    orderItems,
+                    deliveryDate,
+                    notes,
+                    totalAmount: calculateTotal(),
+                    orderDate: new Date().toISOString().split('T')[0]
+                };
+                
+                onSubmitOrder(orderData);
+            };
+
+            return (
+                <div className="max-w-6xl mx-auto p-4">
+                    <Card className="p-6">
+                        <h1 className="text-3xl font-bold text-green-800 mb-6 flex items-center">
+                            🛒 注文フォーム
+                        </h1>
+
+                        <form onSubmit={handleSubmit} className="space-y-8">
+                            {/* Customer ID Section */}
+                            <div>
+                                <h2 className="text-xl font-semibold text-gray-800 mb-4">顧客情報</h2>
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        顧客ID <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={customerId}
+                                        onChange={(e) => setCustomerId(e.target.value)}
+                                        className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                                        placeholder="例: 0001"
+                                        required
+                                    />
+                                    {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+                                </div>
+                                
+                                {selectedClient && (
+                                    <div className="bg-gray-50 p-4 rounded-lg">
+                                        <h3 className="font-medium text-gray-800 mb-2">顧客情報</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                                            <div><span className="font-medium">会社名:</span> {selectedClient.companyName}</div>
+                                            {selectedClient.contactPerson && (
+                                                <div><span className="font-medium">担当者:</span> {selectedClient.contactPerson}</div>
+                                            )}
+                                            {selectedClient.phone && (
+                                                <div><span className="font-medium">電話:</span> {selectedClient.phone}</div>
+                                            )}
+                                            {selectedClient.address && (
+                                                <div className="md:col-span-2"><span className="font-medium">住所:</span> {selectedClient.address}</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Product Order Section */}
+                            <div>
+                                <h2 className="text-xl font-semibold text-gray-800 mb-4">商品注文</h2>
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full border-collapse">
+                                        <thead>
+                                            <tr className="bg-gray-100">
+                                                <th className="border border-gray-300 px-4 py-3 text-left">商品名</th>
+                                                <th className="border border-gray-300 px-4 py-3 text-center">単価</th>
+                                                <th className="border border-gray-300 px-4 py-3 text-center">注文数</th>
+                                                <th className="border border-gray-300 px-4 py-3 text-center">小計</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {products.map(product => {
+                                                const quantity = parseInt(productQuantities[product.id] || '0') || 0;
+                                                const subtotal = quantity * product.salePrice;
+                                                return (
+                                                    <tr key={product.id} className="hover:bg-gray-50">
+                                                        <td className="border border-gray-300 px-4 py-2">
+                                                            {product.name}
+                                                        </td>
+                                                        <td className="border border-gray-300 px-4 py-2 text-center">
+                                                            ¥{product.salePrice.toLocaleString()}/{product.unit}
+                                                        </td>
+                                                        <td className="border border-gray-300 px-4 py-2 text-center">
+                                                            <input
+                                                                type="text"
+                                                                value={productQuantities[product.id] || ''}
+                                                                onChange={(e) => handleQuantityChange(product.id, e.target.value)}
+                                                                className="w-20 px-2 py-1 border border-gray-300 rounded text-center"
+                                                                placeholder="0"
+                                                            />
+                                                            <span className="ml-1">{product.unit}</span>
+                                                        </td>
+                                                        <td className="border border-gray-300 px-4 py-2 text-center">
+                                                            {quantity > 0 ? `¥${subtotal.toLocaleString()}` : '-'}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td colSpan={3} className="border border-gray-300 px-4 py-3 text-right font-semibold">
+                                                    合計金額
+                                                </td>
+                                                <td className="border border-gray-300 px-4 py-3 text-center font-semibold text-lg">
+                                                    ¥{calculateTotal().toLocaleString()}
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {/* Delivery Information */}
+                            <div>
+                                <h2 className="text-xl font-semibold text-gray-800 mb-4">配送情報</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            希望納品日 <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={deliveryDate}
+                                            onChange={(e) => setDeliveryDate(e.target.value)}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            備考・特記事項
+                                        </label>
+                                        <textarea
+                                            value={notes}
+                                            onChange={(e) => setNotes(e.target.value)}
+                                            rows={3}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                                            placeholder="配送時間帯、特別な要望など"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Submit Button */}
+                            <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                                <Button 
+                                    type="button" 
+                                    variant="secondary" 
+                                    onClick={() => {
+                                        setCustomerId('');
+                                        setSelectedClient(null);
+                                        setProductQuantities({});
+                                        setDeliveryDate('');
+                                        setNotes('');
+                                        setError('');
+                                    }}
+                                >
+                                    クリア
+                                </Button>
+                                <Button 
+                                    type="submit" 
+                                    variant="primary" 
+                                    disabled={!selectedClient}
+                                    className="px-8"
+                                >
+                                    注文を送信
+                                </Button>
+                            </div>
+                        </form>
+                    </Card>
+                </div>
+            );
+        };
+
+        // Order Confirmation Component
+        const CustomerOrderConfirmation = ({ orderData, onNewOrder }) => {
+            const orderNumber = `ON-${orderData.orderDate.replace(/-/g, '')}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+
+            return (
+                <div className="max-w-4xl mx-auto p-4">
+                    <Card className="p-8">
+                        <div className="text-center mb-8">
+                            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                ✓
+                            </div>
+                            <h1 className="text-3xl font-bold text-green-800 mb-2">注文を受け付けました</h1>
+                            <p className="text-gray-600">
+                                ご注文ありがとうございます。以下の内容で承りました。
+                            </p>
+                        </div>
+
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                            <div className="text-center">
+                                <p className="text-sm text-green-600 font-medium">注文番号</p>
+                                <p className="text-2xl font-bold text-green-800">{orderNumber}</p>
+                            </div>
+                        </div>
+
+                        <div className="mb-8">
+                            <h2 className="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b">
+                                ご注文者情報
+                            </h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <span className="text-sm font-medium text-gray-600">顧客ID:</span>
+                                    <p className="font-medium">{orderData.customerId}</p>
+                                </div>
+                                <div>
+                                    <span className="text-sm font-medium text-gray-600">会社名:</span>
+                                    <p className="font-medium">{orderData.customerInfo.companyName}</p>
+                                </div>
+                                {orderData.customerInfo.contactPerson && (
+                                    <div>
+                                        <span className="text-sm font-medium text-gray-600">担当者:</span>
+                                        <p className="font-medium">{orderData.customerInfo.contactPerson}</p>
+                                    </div>
+                                )}
+                                {orderData.customerInfo.phone && (
+                                    <div>
+                                        <span className="text-sm font-medium text-gray-600">電話番号:</span>
+                                        <p className="font-medium">{orderData.customerInfo.phone}</p>
+                                    </div>
+                                )}
+                                {orderData.customerInfo.address && (
+                                    <div className="md:col-span-2">
+                                        <span className="text-sm font-medium text-gray-600">お届け先:</span>
+                                        <p className="font-medium">{orderData.customerInfo.address}</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="mb-8">
+                            <h2 className="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b">
+                                ご注文内容
+                            </h2>
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full border-collapse">
+                                    <thead>
+                                        <tr className="bg-gray-50">
+                                            <th className="border border-gray-300 px-4 py-3 text-left font-medium text-gray-700">
+                                                商品名
+                                            </th>
+                                            <th className="border border-gray-300 px-4 py-3 text-center font-medium text-gray-700">
+                                                数量
+                                            </th>
+                                            <th className="border border-gray-300 px-4 py-3 text-center font-medium text-gray-700">
+                                                単価
+                                            </th>
+                                            <th className="border border-gray-300 px-4 py-3 text-center font-medium text-gray-700">
+                                                小計
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {orderData.orderItems.map((item, index) => (
+                                            <tr key={index} className="hover:bg-gray-50">
+                                                <td className="border border-gray-300 px-4 py-3">
+                                                    {item.productName}
+                                                </td>
+                                                <td className="border border-gray-300 px-4 py-3 text-center">
+                                                    {item.quantity}{item.unit}
+                                                </td>
+                                                <td className="border border-gray-300 px-4 py-3 text-center">
+                                                    ¥{item.unitPrice.toLocaleString()}
+                                                </td>
+                                                <td className="border border-gray-300 px-4 py-3 text-center">
+                                                    ¥{item.totalPrice.toLocaleString()}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colSpan={3} className="border border-gray-300 px-4 py-3 text-right font-semibold bg-gray-50">
+                                                合計金額
+                                            </td>
+                                            <td className="border border-gray-300 px-4 py-3 text-center font-bold text-lg bg-gray-50">
+                                                ¥{orderData.totalAmount.toLocaleString()}
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div className="mb-8">
+                            <h2 className="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b">
+                                配送情報
+                            </h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <span className="text-sm font-medium text-gray-600">注文日:</span>
+                                    <p className="font-medium">{orderData.orderDate}</p>
+                                </div>
+                                <div>
+                                    <span className="text-sm font-medium text-gray-600">希望納品日:</span>
+                                    <p className="font-medium">{orderData.deliveryDate}</p>
+                                </div>
+                                {orderData.notes && (
+                                    <div className="md:col-span-2">
+                                        <span className="text-sm font-medium text-gray-600">備考:</span>
+                                        <p className="font-medium">{orderData.notes}</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8">
+                            <h3 className="font-semibold text-yellow-800 mb-2">重要事項</h3>
+                            <ul className="text-sm text-yellow-700 space-y-1">
+                                <li>• 注文の変更・キャンセルは配送日前日の14:00までにお電話でご連絡ください。</li>
+                                <li>• 配送時間は8:00～12:00の間を予定しております。</li>
+                                <li>• 天候や交通状況により配送時間が前後する場合があります。</li>
+                                <li>• ご不明な点がございましたら、お気軽にお問い合わせください。</li>
+                            </ul>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center print-hidden">
+                            <Button
+                                onClick={onNewOrder}
+                                variant="primary"
+                                className="px-8 py-3"
+                            >
+                                新しい注文を作成
+                            </Button>
+                            <Button
+                                onClick={() => window.print()}
+                                variant="secondary"
+                                className="px-8 py-3"
+                            >
+                                注文確認書を印刷
+                            </Button>
+                        </div>
+
+                        <div className="mt-8 pt-6 border-t border-gray-200 text-center">
+                            <p className="text-sm text-gray-600 mb-2">
+                                お問い合わせ・ご不明な点がございましたら
+                            </p>
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                                <span className="text-lg font-semibold text-green-800">
+                                    📞 029-123-4567
+                                </span>
+                                <span className="text-sm text-gray-500">
+                                    (営業時間: 6:00 - 14:00)
+                                </span>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            );
+        };
+
+        // Main Customer App
+        const CustomerApp = () => {
+            const [currentStep, setCurrentStep] = useState('order');
+            const [orderData, setOrderData] = useState(null);
+
+            const handleOrderSubmit = (data) => {
+                setOrderData(data);
+                setCurrentStep('confirmation');
+            };
+
+            const handleNewOrder = () => {
+                setOrderData(null);
+                setCurrentStep('order');
+            };
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+                    <header className="bg-white shadow-sm border-b print-hidden">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                    <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center mr-3">
+                                        <span className="text-white font-bold text-xl">水</span>
+                                    </div>
+                                    <div>
+                                        <h1 className="text-2xl font-bold text-green-800">水戸青果</h1>
+                                        <p className="text-sm text-gray-600">オンライン注文システム</p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-sm text-gray-600">営業時間: 6:00 - 14:00</p>
+                                    <p className="text-sm text-gray-600">TEL: 029-123-4567</p>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="py-8">
+                        {currentStep === 'order' ? (
+                            <CustomerOrderForm onSubmitOrder={handleOrderSubmit} />
+                        ) : (
+                            <CustomerOrderConfirmation 
+                                orderData={orderData} 
+                                onNewOrder={handleNewOrder} 
+                            />
+                        )}
+                    </main>
+
+                    <footer className="bg-gray-800 text-white py-8 mt-16 print-hidden">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-4">水戸青果株式会社</h3>
+                                    <p className="text-gray-300 text-sm">
+                                        〒310-0015<br />
+                                        茨城県水戸市宮町1-1-1<br />
+                                        水戸ビルディング 3F
+                                    </p>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-4">お問い合わせ</h3>
+                                    <p className="text-gray-300 text-sm">
+                                        電話: 029-123-4567<br />
+                                        FAX: 029-123-4568<br />
+                                        Email: info@mitoseika.example.com
+                                    </p>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-4">営業時間</h3>
+                                    <p className="text-gray-300 text-sm">
+                                        月曜日 - 土曜日: 6:00 - 14:00<br />
+                                        日曜日・祝日: 休業<br />
+                                        注文締切: 当日6:00まで
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="border-t border-gray-700 mt-8 pt-8 text-center">
+                                <p className="text-gray-400 text-sm">
+                                    © 2024 水戸青果株式会社. All rights reserved.
+                                </p>
+                            </div>
+                        </div>
+                    </footer>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<CustomerApp />, document.getElementById('customer-app'));
+    </script>
+</body>
+</html>

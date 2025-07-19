@@ -15,9 +15,10 @@ import { CurrencyYenIcon } from '../icons/CurrencyYenIcon'; // Icon for Purchase
 interface SidebarProps {
   currentPage: PageView;
   navigateTo: (page: PageView) => void;
+  onBackToSelector?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ currentPage, navigateTo }) => {
+const Sidebar: React.FC<SidebarProps> = ({ currentPage, navigateTo, onBackToSelector }) => {
   const navItems = [
     { page: PageView.DASHBOARD, label: 'ダッシュボード', icon: <HomeIcon className="w-6 h-6" /> },
     { page: PageView.INTEGRATED_ANALYSIS, label: '統合分析', icon: <PresentationChartLineIcon className="w-6 h-6" /> },
@@ -55,8 +56,16 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, navigateTo }) => {
           </button>
         ))}
       </nav>
-      <div className="p-4 border-t border-green-700 text-center">
-        <p className="text-xs text-green-300">&copy; 2024 水戸青果株式会社</p>
+      <div className="p-4 border-t border-green-700">
+        {onBackToSelector && (
+          <button
+            onClick={onBackToSelector}
+            className="w-full mb-3 px-3 py-2 bg-green-700 hover:bg-green-600 rounded-lg text-sm transition-colors"
+          >
+            ← メニューに戻る
+          </button>
+        )}
+        <p className="text-xs text-green-300 text-center">&copy; 2024 水戸青果株式会社</p>
       </div>
     </aside>
   );

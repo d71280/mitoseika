@@ -16,6 +16,8 @@ import InventoryAdjustPage from './components/inventory/InventoryAdjustPage'; //
 import OrderAnalysisPage from './components/OrderAnalysisPage';
 import PurchasePriceInfoPage from './components/PurchasePriceInfoPage';
 import IntegratedAnalysisPage from './components/IntegratedAnalysisPage';
+import AppSelector from './components/AppSelector';
+import CustomerApp from './components/CustomerApp';
 import { mockOrders, mitoSeikaCompanyInfo, Client, mockClients, Product, mockProductsInventory } from './types';
 
 export enum PageView {
@@ -35,6 +37,7 @@ export enum PageView {
 }
 
 const App: React.FC = () => {
+  const [appMode, setAppMode] = useState<'selector' | 'customer' | 'admin'>('selector');
   const [currentPage, setCurrentPage] = useState<PageView>(PageView.DASHBOARD);
   const [selectedAnalysisItemId, setSelectedAnalysisItemId] = useState<string | null>(null);
   const [editingClientId, setEditingClientId] = useState<string | 'new' | null>(null);
@@ -43,6 +46,15 @@ const App: React.FC = () => {
   // Lifted states
   const [clients, setClients] = useState<Client[]>(mockClients);
   const [products, setProducts] = useState<Product[]>(mockProductsInventory); // Inventory products
+
+  const handleSelectApp = (appType: 'customer' | 'admin') => {
+    setAppMode(appType);
+  };
+
+  const handleBackToSelector = () => {
+    setAppMode('selector');
+    setCurrentPage(PageView.DASHBOARD);
+  };
 
   const navigateTo = (page: PageView, itemId?: string | 'new') => {
     setCurrentPage(page);
@@ -181,9 +193,30 @@ const App: React.FC = () => {
       pageContent = <DashboardPage />;
   }
 
+  if (appMode === 'selector') {
+    return <AppSelector onSelectApp={handleSelectApp} />;
+  }
+
+  if (appMode === 'customer') {
+    return (
+      <div>
+        <div className="fixed top-4 left-4 z-50">
+          <button
+            onClick={handleBackToSelector}
+            className="bg-white/90 hover:bg-white text-gray-700 px-4 py-2 rounded-lg shadow-md border transition-colors"
+          >
+            ← メニューに戻る
+          </button>
+        </div>
+        <CustomerApp />
+      </div>
+    );
+  }
+
+  // Admin mode
   return (
     <div className="flex h-screen bg-gradient-to-br from-green-700 via-lime-600 to-yellow-500">
-      <Sidebar currentPage={currentPage} navigateTo={navigateTo} />
+      <Sidebar currentPage={currentPage} navigateTo={navigateTo} onBackToSelector={handleBackToSelector} />
       <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-y-auto bg-slate-100 print:p-0 print:overflow-visible">
         <div className="w-full max-w-full mx-auto">
           {pageContent}
